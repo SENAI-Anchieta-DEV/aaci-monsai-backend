@@ -2,18 +2,20 @@ package com.senai.monsai.domain.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
-public class Medicamento {
+public class Medicao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nome;
-    private String dosagem;
+    private Double valor;
+    private LocalDateTime dataHora;
 
     @ManyToOne
-    private Idoso idoso;
+    private Sensor sensor;
 
 }
 

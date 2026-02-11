@@ -1,9 +1,7 @@
 package com.senai.monsai.domain.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.senai.monsai.domain.enums.TipoUsuario;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
@@ -18,5 +16,6 @@ public class Usuario {
     private String cpf;
     private String email;
     private String senha;
-    private String tipo_perfil;
+    @Enumerated(EnumType.STRING)
+    private TipoUsuario tipo;
 }
