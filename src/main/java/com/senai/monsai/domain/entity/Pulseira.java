@@ -16,7 +16,7 @@ public class Pulseira {
 
     private String serial;
 
-    @OneToOne
+    @OneToOne(mappedBy = "pulseira")
     private Idoso idoso;
 
     @OneToMany(mappedBy = "pulseira", cascade = CascadeType.ALL)

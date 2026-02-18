@@ -16,4 +16,5 @@ public class Asilo {
     private String endereco;
     @OneToMany(mappedBy = "asilo")
     private List<Idoso> idosos;
+    private boolean ativo;
 }
