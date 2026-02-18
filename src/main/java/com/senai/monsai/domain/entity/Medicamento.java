@@ -10,7 +10,7 @@ public class Medicamento {
     private Long id;
 
     private String nome;
-    private String dosagem;
+    private String descricao;
 
     @ManyToOne
     private Idoso idoso;

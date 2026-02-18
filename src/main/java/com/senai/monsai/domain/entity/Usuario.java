@@ -18,4 +18,6 @@ public class Usuario {
     private String senha;
     @Enumerated(EnumType.STRING)
     private TipoUsuario tipo;
+    @JoinColumn(name = "asilo_id")
+    private Asilo asilo;
 }

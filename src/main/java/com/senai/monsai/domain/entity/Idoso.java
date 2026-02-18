@@ -1,9 +1,6 @@
 package com.senai.monsai.domain.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
@@ -17,5 +14,7 @@ public class Idoso {
     private String nome;
     private String cpf;
     private String email;
+    @JoinColumn(name = "asilo_id")
+    private Asilo asilo;
 
 }

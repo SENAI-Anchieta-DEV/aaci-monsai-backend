@@ -1,10 +1,9 @@
 package com.senai.monsai.domain.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.List;
 
 @Entity
 @Data
@@ -15,4 +14,6 @@ public class Asilo {
     private String nome;
     private String cnpj;
     private String endereco;
+    @OneToMany(mappedBy = "asilo")
+    private List<Idoso> idosos;
 }
