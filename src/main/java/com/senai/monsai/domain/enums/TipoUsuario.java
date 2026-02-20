@@ -1,7 +1,8 @@
 package com.senai.monsai.domain.enums;
 
 public enum TipoUsuario {
-    Admin,
+    SUPER_ADMIN,
+    ADMIN,
     GESTOR,
     CUIDADOR,
     FAMILIAR,
