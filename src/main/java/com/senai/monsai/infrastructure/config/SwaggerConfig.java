@@ -22,9 +22,9 @@ public class SwaggerConfig {
                                 .name("MONSAI")
                                 .email("suporte@MONSAI.com")))
                 .addSecurityItem(new SecurityRequirement()
-                        .addList("Bearer Authentication"))
+                        .addList("bearerAuth"))
                 .components(new Components()
-                        .addSecuritySchemes("Bearer Authentication", createAPIKeyScheme()));
+                        .addSecuritySchemes("bearerAuth", createAPIKeyScheme()));
     }
     private SecurityScheme createAPIKeyScheme() {
         return new SecurityScheme()
