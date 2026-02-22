@@ -1,6 +1,8 @@
 package com.senai.monsai.application.service;
 import com.senai.monsai.application.dto.UsuarioCreateDTO;
+import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.repository.AsiloRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,17 +14,20 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AsiloRepository asiloRepository;
 
     public Usuario criarUsuario(UsuarioCreateDTO dto) {
-        if(usuarioRepository.findByEmail(dto.email()).isPresent()) {
-            throw new RuntimeException("E-mail já está em uso!");
-        }
+        Asilo asilo = asiloRepository.findById(dto.getAsiloId())
+                .orElseThrow(() -> new RuntimeException("Asilo não encontrado"));
 
         Usuario novoUsuario = new Usuario();
-        novoUsuario.setNome(dto.nome());
-        novoUsuario.setEmail(dto.email());
-        novoUsuario.setTipo(dto.tipo());
-        novoUsuario.setSenha(passwordEncoder.encode(dto.senha()));
+        novoUsuario.setNome(dto.getNome());
+        novoUsuario.setEmail(dto.getEmail());
+        novoUsuario.setSenha(passwordEncoder.encode(dto.getSenha())); // Sempre encripte!
+        // novoUsuario.setTipo(TipoUsuario.valueOf(dto.getTipoUsuario())); // Assumindo que você tem um Enum
+        novoUsuario.setAsilo(asilo);
+
         return usuarioRepository.save(novoUsuario);
     }
+
 }
