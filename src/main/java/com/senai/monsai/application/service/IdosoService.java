@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class IdosoService {
@@ -41,8 +43,12 @@ public class IdosoService {
         idoso.setCpf(dto.getCpf());
         idoso.setEmail(dto.getEmail());
         idoso.setPulseira(pulseira);
-        idoso.setAsilo(asiloDoGestor); // O idoso vai direto pro asilo do gestor!
+        idoso.setAsilo(asiloDoGestor);
 
         return idosoRepository.save(idoso);
     }
+    public List<Idoso> listarTodos() {
+        return idosoRepository.findAll();
+    }
+
 }

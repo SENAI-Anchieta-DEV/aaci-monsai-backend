@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/idosos")
 @RequiredArgsConstructor
@@ -22,5 +24,11 @@ public class IdosoController {
     @PreAuthorize("hasRole('GESTOR')") // APENAS GESTOR PODE ACESSAR!
     public ResponseEntity<Idoso> criarIdoso(@RequestBody IdosoCreateDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(idosoService.criarIdoso(dto));
+    }
+    @GetMapping
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR', 'ENFERMEIRO', 'CUIDADOR')")
+    public ResponseEntity<List<Idoso>> listarIdosos() {
+        return ResponseEntity.ok(idosoService.listarTodos());
     }
 }

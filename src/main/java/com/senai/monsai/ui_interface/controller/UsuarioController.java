@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
@@ -27,5 +29,11 @@ public class UsuarioController {
     public ResponseEntity<Usuario> criarUsuario(@RequestBody UsuarioCreateDTO dto) {
         Usuario novoUsuario = usuarioService.criarUsuario(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoUsuario);
+    }
+    @GetMapping
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR')")
+    public ResponseEntity<List<Usuario>> listarUsuarios() {
+        return ResponseEntity.ok(usuarioService.listarTodos());
     }
 }

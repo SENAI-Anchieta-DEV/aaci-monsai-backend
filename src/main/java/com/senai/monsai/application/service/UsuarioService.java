@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
@@ -29,6 +31,9 @@ public class UsuarioService {
         novoUsuario.setAsilo(asilo);
 
         return usuarioRepository.save(novoUsuario);
+    }
+    public List<Usuario> listarTodos() {
+        return usuarioRepository.findAll();
     }
 
 }
