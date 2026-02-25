@@ -23,7 +23,6 @@ public class IdosoService {
     private final UsuarioRepository usuarioRepository;
 
     public Idoso criarIdoso(IdosoCreateDTO dto) {
-        // 1. Descobre quem é o Gestor que está logado fazendo a requisição
         String emailGestorLogado = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario gestor = usuarioRepository.findByEmail(emailGestorLogado).orElseThrow();
         Asilo asiloDoGestor = gestor.getAsilo();
@@ -32,12 +31,10 @@ public class IdosoService {
             throw new RuntimeException("Este usuário não está vinculado a nenhum asilo.");
         }
 
-        // 2. Cria a Pulseira IoT no banco
         Pulseira pulseira = new Pulseira();
         pulseira.setSerial(dto.getSerialPulseira());
         pulseira = pulseiraRepository.save(pulseira);
 
-        // 3. Cria o Idoso e amarra tudo
         Idoso idoso = new Idoso();
         idoso.setNome(dto.getNome());
         idoso.setCpf(dto.getCpf());

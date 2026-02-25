@@ -1,10 +1,14 @@
 package com.senai.monsai.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -26,4 +30,7 @@ public class Idoso {
     @OneToOne
     @JoinColumn(name = "pulseira_id")
     private Pulseira pulseira;
+    @ManyToMany(mappedBy = "idosos")
+    @JsonIgnore
+    private List<Usuario> usuarios = new ArrayList<>();
 }
