@@ -1,7 +1,7 @@
 package com.senai.monsai.domain.exception;
 
 public class RecursoNaoEncontradoException extends RuntimeException {
-    public RecursoNaoEncontradoException(String mensagem) {
-        super(mensagem);
+    public RecursoNaoEncontradoException() {
+        super("Usuário não encontrado.");
     }
 }
