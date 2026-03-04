@@ -1,4 +1,7 @@
 package com.senai.monsai.domain.repository;
 
-public interface MensagemMqttRepository {
+import com.senai.monsai.domain.entity.MensagemMqtt;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface MensagemMqttRepository extends JpaRepository<MensagemMqtt, String> {
 }

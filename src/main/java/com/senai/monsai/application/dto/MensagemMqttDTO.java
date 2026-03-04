@@ -1,4 +1,10 @@
 package com.senai.monsai.application.dto;
 
-public class MsgMqttTesteDTO {
+import java.time.LocalDateTime;
+
+public record MensagemMqttDTO(
+        String topico,
+        String conteudo,
+        LocalDateTime dataRecebimento
+) {
 }
