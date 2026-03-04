@@ -3,6 +3,7 @@ package com.senai.monsai.domain.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -35,4 +36,6 @@ public class Idoso {
     @ManyToMany(mappedBy = "idosos")
     @JsonIgnore
     private List<Usuario> usuarios = new ArrayList<>();
+    @Builder.Default
+    private boolean ativo = true;
 }

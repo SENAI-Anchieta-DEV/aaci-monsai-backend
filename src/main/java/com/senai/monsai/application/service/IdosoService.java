@@ -5,6 +5,7 @@ import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Pulseira;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.PulseiraRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
@@ -46,6 +47,20 @@ public class IdosoService {
     }
     public List<Idoso> listarTodos() {
         return idosoRepository.findAll();
+    }
+    public void inativarIdoso(Long idIdoso) {
+        Idoso idoso = idosoRepository.findById(idIdoso)
+                .orElseThrow(RecursoNaoEncontradoException::new);
+        idoso.setAtivo(false);
+        if (idoso.getPulseira() != null) {
+            idoso.setPulseira(null);
+        }
+        List<Usuario> usuariosQueCuidavam = idoso.getUsuarios();
+        for (Usuario usuario : usuariosQueCuidavam) {
+            usuario.getIdosos().remove(idoso);
+            usuarioRepository.save(usuario);
+        }
+        idosoRepository.save(idoso);
     }
 
 }

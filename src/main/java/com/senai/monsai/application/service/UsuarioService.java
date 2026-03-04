@@ -4,6 +4,7 @@ import com.senai.monsai.application.dto.UsuarioCreateDTO;
 import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.exception.AsiloNaoEncontradoException;
 import com.senai.monsai.domain.repository.AsiloRepository;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
@@ -25,7 +26,7 @@ public class UsuarioService {
 
     public Usuario criarUsuario(UsuarioCreateDTO dto) {
         Asilo asilo = asiloRepository.findById(dto.getAsiloId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Asilo com ID " + dto.getAsiloId() + " não foi encontrado."));
+                .orElseThrow(() -> new AsiloNaoEncontradoException(dto.getAsiloId()));
 
         Usuario novoUsuario = new Usuario();
         novoUsuario.setNome(dto.getNome());
@@ -41,16 +42,16 @@ public class UsuarioService {
     }
     public void atualizarSenha(Long idUsuario, AtualizarSenhaDTO dto) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado para atualização."));
+                .orElseThrow(RecursoNaoEncontradoException::new);
         usuario.setSenha(passwordEncoder.encode(dto.getNovaSenha()));
         usuarioRepository.save(usuario);
     }
     public void vincularIdoso(Long idUsuario, Long idIdoso) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado."));
+                .orElseThrow(RecursoNaoEncontradoException::new);
 
         Idoso idoso = idosoRepository.findById(idIdoso)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Idoso não encontrado."));
+                .orElseThrow(RecursoNaoEncontradoException::new);
 
         // Se o idoso ainda não estiver na lista desse usuário, a gente adiciona
         if (!usuario.getIdosos().contains(idoso)) {
@@ -61,14 +62,21 @@ public class UsuarioService {
 
     public void desvincularIdoso(Long idUsuario, Long idIdoso) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado."));
+                .orElseThrow(RecursoNaoEncontradoException::new);
 
         Idoso idoso = idosoRepository.findById(idIdoso)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Idoso não encontrado."));
+                .orElseThrow(RecursoNaoEncontradoException::new);
         if (usuario.getIdosos().contains(idoso)) {
             usuario.getIdosos().remove(idoso);
             usuarioRepository.save(usuario);
         }
+    }
+    public void inativarUsuario(Long idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(RecursoNaoEncontradoException::new);
+        usuario.setAtivo(false);
+        usuario.getIdosos().clear();
+        usuarioRepository.save(usuario);
     }
 
 }

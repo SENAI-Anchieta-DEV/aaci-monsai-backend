@@ -76,4 +76,14 @@ public class UsuarioController {
         usuarioService.desvincularIdoso(idUsuario, idIdoso);
         return ResponseEntity.noContent().build();
     }
+    // ==========================================
+    // 6. Inativar Usuario
+    // ==========================================
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Inativar um usuário (Demissão/Desligamento)", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR')")
+    public ResponseEntity<Void> inativarUsuario(@PathVariable Long id) {
+        usuarioService.inativarUsuario(id);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
 }

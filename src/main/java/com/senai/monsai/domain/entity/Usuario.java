@@ -43,4 +43,6 @@ public class Usuario {
             inverseJoinColumns = @JoinColumn(name = "idoso_id")
     )
     private List<Idoso> idosos = new ArrayList<>();
+    @Builder.Default
+    private boolean ativo = true;
 }
