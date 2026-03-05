@@ -12,6 +12,7 @@ import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
@@ -30,7 +31,11 @@ public class MqttConfig {
         MqttConnectOptions options = new MqttConnectOptions();
         options.setServerURIs(new String[] { brokerUrl });
         options.setCleanSession(true);
-        // Se o seu broker tiver user/senha, adicione aqui:
+        // Reconexão validada
+        options.setAutomaticReconnect(true);
+        options.setConnectionTimeout(10);
+        options.setKeepAliveInterval(30);
+        // Caso broker exija senha e usuario
         // options.setUserName("seu_usuario");
         // options.setPassword("sua_senha".toCharArray());
         factory.setConnectionOptions(options);
@@ -73,6 +78,10 @@ public class MqttConfig {
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1); // Garantia de entrega pelo menos uma vez
         adapter.setOutputChannel(mqttInputChannel()); // Joga a mensagem no canal de entrada
+
+        // LOG DE ERRO: Se a conexão cair ou o JSON vier errado
+        adapter.setErrorChannelName("mqttErrorChannel");
+
         return adapter;
     }
 }
