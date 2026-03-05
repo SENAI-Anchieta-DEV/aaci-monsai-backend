@@ -13,6 +13,8 @@ import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class MensagemMqttService {
@@ -26,24 +28,25 @@ public class MensagemMqttService {
         String payload = message.getPayload();
 
         try {
-            // 1. Tentativa de validação do JSON
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new JavaTimeModule());
+
+            // Converte o JSON para o novo DTO
             MensagemMqttDTO dto = mapper.readValue(payload, MensagemMqttDTO.class);
 
-            // 2. JSON válido - cria a entidade a partir do DTO
+            // Mapeia para a entidade
             MensagemMqtt novaMensagem = MensagemMqtt.builder()
                     .topico(topico)
-                    .conteudo(dto.conteudo()) // Conteudo validado
-                    .dataRecebimento(dto.dataRecebimento()) // salvamento da data vinda do JSON
+                    .conteudo("Dispositivo: " + dto.dispositivoId() + " | Valor: " + dto.valor())
+                    .dataRecebimento(LocalDateTime.now()) // Gerado pelo servidor, evitando erro de parsing
                     .build();
 
             repository.save(novaMensagem);
-            System.out.println("Mensagem válida salva no banco: " + dto.conteudo());
-
+            System.out.println("✅ Mensagem válida salva no banco.");
+        } catch (com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException e) {
+            System.err.println("❌ Erro de Contrato: Campo inesperado recebido: " + e.getPropertyName());
         } catch (Exception e) {
-            // 3. Tratamento de erro padrão
-            System.err.println("ERRO: Payload malformado ou contrato violado. Payload: " + payload);
+            System.err.println("❌ Erro inesperado no processamento: " + e.getMessage());
         }
     }
 
@@ -52,6 +55,12 @@ public class MensagemMqttService {
 
     public void publicar(String topico, String conteudo) {
         mqttGateway.sendToMqtt(conteudo, topico);
-        System.out.println("Enviando para o Broker -> Tópico: " + topico + " | Mensagem: " + conteudo);
+        System.out.println("Enviando para o Broker - Tópico: " + topico + " | Mensagem: " + conteudo);
+    }
+
+    // AACI-136: Implementar ação simples
+    public void simularSensor() {
+        String json = "{\"dispositivoId\": \"PULSEIRA-01\", \"tipo\": \"STATUS\", \"valor\": 1.0}";
+        publicar("monsai/sensores", json);
     }
 }
