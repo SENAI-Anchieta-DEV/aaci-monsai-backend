@@ -5,6 +5,7 @@ import com.senai.monsai.application.dto.LoginResponseDTO;
 import com.senai.monsai.application.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +23,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Fazer login", description = "Recebe e-mail e senha e retorna o token JWT.")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto) {
         LoginResponseDTO response = authService.autenticar(dto);
         return ResponseEntity.ok(response);
     }

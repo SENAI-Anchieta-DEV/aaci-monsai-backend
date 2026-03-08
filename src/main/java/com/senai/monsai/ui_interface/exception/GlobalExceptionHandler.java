@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -105,6 +106,20 @@ public class GlobalExceptionHandler {
     }
 
     // =======================================================
+    // 401 UNAUTHORIZED - E-mail ou Senha incorretos no Login
+    // =======================================================
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErroPadrao> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
+        ErroPadrao erro = new ErroPadrao(
+                LocalDateTime.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Credenciais inválidas. Verifique seu e-mail e senha e tente novamente.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erro);
+    }
+
+    // =======================================================
     // 403 FORBIDDEN - Usuário sem permissão (Spring Security)
     // =======================================================
     @ExceptionHandler(AccessDeniedException.class)
@@ -123,7 +138,8 @@ public class GlobalExceptionHandler {
     // =======================================================
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroPadrao> handleGenericException(Exception ex, HttpServletRequest request) {
-        ex.printStackTrace();
+        ex.printStackTrace(); // Mantém o erro no console para debug
+
         ErroPadrao erro = new ErroPadrao(
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
