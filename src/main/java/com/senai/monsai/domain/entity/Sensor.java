@@ -12,6 +12,6 @@ public class Sensor {
     private String tipo;
 
     @ManyToOne
-    private Pulseira pulseira;
+    private Dispositivo dispositivo;
 
 }

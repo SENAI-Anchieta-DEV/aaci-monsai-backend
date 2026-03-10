@@ -1,9 +1,7 @@
 package com.senai.monsai.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Entity
@@ -24,6 +22,6 @@ public class Idoso {
     @JoinColumn(name = "asilo_id")
     private Asilo asilo;
     @OneToOne
-    @JoinColumn(name = "pulseira_id")
-    private Pulseira pulseira;
+    @JoinColumn(name = "dispositivo_id")
+    private Dispositivo dispositivo;
 }

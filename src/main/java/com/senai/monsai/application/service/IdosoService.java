@@ -3,7 +3,7 @@ package com.senai.monsai.application.service;
 import com.senai.monsai.application.dto.IdosoCreateDTO;
 import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
-import com.senai.monsai.domain.entity.Pulseira;
+import com.senai.monsai.domain.entity.Dispositivo;
 import com.senai.monsai.domain.entity.Usuario;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.PulseiraRepository;
@@ -31,18 +31,18 @@ public class IdosoService {
         }
 
         // 2. Cria a Pulseira IoT no banco
-        Pulseira pulseira = new Pulseira();
-        pulseira.setSerial(dto.getSerialPulseira());
-        pulseira = pulseiraRepository.save(pulseira);
+        Dispositivo dispositivo = new Dispositivo();
+        dispositivo.setSerial(dto.serialDispositivo());
+        dispositivo = pulseiraRepository.save(dispositivo);
 
         // 3. Cria o Idoso e amarra tudo
         Idoso idoso = new Idoso();
-        idoso.setNome(dto.getNome());
-        idoso.setCpf(dto.getCpf());
-        idoso.setEmail(dto.getEmail());
-        idoso.setPulseira(pulseira);
+        idoso.setNome(dto.nome());
+        idoso.setCpf(dto.cpf());
+        idoso.setEmail(dto.email());
+        idoso.setDispositivo(dispositivo);
         idoso.setAsilo(asiloDoGestor); // O idoso vai direto pro asilo do gestor!
-
+        dispositivo.setIdoso(idoso);
         return idosoRepository.save(idoso);
     }
 }

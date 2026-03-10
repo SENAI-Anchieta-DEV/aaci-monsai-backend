@@ -1,11 +1,18 @@
 package com.senai.monsai.application.dto;
 
-import lombok.Data;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-public class IdosoCreateDTO {
-    private String nome;
-    private String cpf;
-    private String email;
-    private String serialPulseira; // O ID físico da pulseira IoT
-}
+public record IdosoCreateDTO(
+        @NotBlank(message = "O nome é obrigatório.")
+        String nome,
+
+        @NotBlank(message = "O CPF é obrigatório.")
+        String cpf,
+
+        @Email(message = "Formato de e-mail inválido.")
+        String email,
+
+        @NotBlank(message = "O serial da pulseira é obrigatório.")
+        String serialDispositivo
+) {}

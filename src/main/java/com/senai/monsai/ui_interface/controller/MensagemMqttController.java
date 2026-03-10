@@ -1,8 +1,11 @@
 package com.senai.monsai.ui_interface.controller;
 
 import com.senai.monsai.application.dto.MensagemMqttDTO;
+import com.senai.monsai.application.dto.TelemetriaDTO;
 import com.senai.monsai.application.service.MensagemMqttService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,15 +15,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/mqtt")
 @RequiredArgsConstructor
-@Tag(name = "Envio de Mensagem MQTT", description = "Envio de dados (mensagem e tópico) via MQTT")
+@Tag(name = "Simulador MQTT", description = "Simulador de dispositivos IoT")
 public class MensagemMqttController {
-
+/*
     private final MensagemMqttService mqttService;
 
-    @Operation(summary = "Simulador de envio Dados do Sensor", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/simular-sensor")
-    public ResponseEntity<String> dispararSimulacao() {
-        mqttService.simularSensor();
+    @Operation(summary = "Simular recebimento de telemetria")
+    public ResponseEntity<String> dispararSimulacao(@RequestBody TelemetriaDTO dto) {
+        mqttService.publicarTelemetria(dto);
         return ResponseEntity.ok("Simulação disparada com sucesso.");
     }
-}
+*/}

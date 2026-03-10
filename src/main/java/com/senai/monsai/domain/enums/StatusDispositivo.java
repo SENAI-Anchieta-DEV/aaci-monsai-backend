@@ -1,6 +1,6 @@
 package com.senai.monsai.domain.enums;
 
-public enum StatusPulseira {
+public enum StatusDispositivo {
     ATIVO,
     INATIVO,
     MANUTENÇÃO,
