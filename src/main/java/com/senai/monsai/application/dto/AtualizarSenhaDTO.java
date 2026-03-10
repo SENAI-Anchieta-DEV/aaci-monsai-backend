@@ -1,8 +1,12 @@
 package com.senai.monsai.application.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-@Data
-public class AtualizarSenhaDTO {
-    private String novaSenha;
+public record AtualizarSenhaDTO (
+
+    @NotBlank(message = "A nova senha é obrigatória.")
+    String novaSenha
+){
+
 }
