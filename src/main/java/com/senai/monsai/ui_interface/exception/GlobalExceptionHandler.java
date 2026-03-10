@@ -138,7 +138,7 @@ public class GlobalExceptionHandler {
     // =======================================================
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroPadrao> handleGenericException(Exception ex, HttpServletRequest request) {
-        ex.printStackTrace(); // Mantém o erro no console para debug
+        ex.printStackTrace();
 
         ErroPadrao erro = new ErroPadrao(
                 LocalDateTime.now(),
