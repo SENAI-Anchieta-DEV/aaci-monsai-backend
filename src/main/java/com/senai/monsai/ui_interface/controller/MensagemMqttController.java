@@ -23,12 +23,4 @@ public class MensagemMqttController {
         mqttService.simularSensor();
         return ResponseEntity.ok("Simulação disparada com sucesso.");
     }
-
-    /* @Operation(summary = "Enviar Mensagem MQTT", security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/enviar")
-    public ResponseEntity<String> enviarMensagem(@RequestBody MensagemMqttDTO dto) {
-        // Chamaremos um método de envio no Service
-        mqttService.publicar(dto.topico(), dto.conteudo());
-        return ResponseEntity.ok("Comando enviado com sucesso para o tópico: " + dto.topico());
-    } */
 }

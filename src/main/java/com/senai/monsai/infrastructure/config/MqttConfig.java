@@ -26,13 +26,15 @@ public class MqttConfig {
     public MqttPahoClientFactory mqttClientFactory() {
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
         MqttConnectOptions options = new MqttConnectOptions();
-        options.setServerURIs(new String[] { brokerUrl });
+        options.setServerURIs(new String[]{brokerUrl});
         options.setAutomaticReconnect(true);
+        // Opcional: defina timeout para o erro de conexão aparecer mais rápido nos testes
+        options.setConnectionTimeout(10);
         factory.setConnectionOptions(options);
         return factory;
     }
 
-    // 1. Canal de Saída
+    // --- SAÍDA ---
     @Bean
     public MessageChannel mqttOutboundChannel() {
         return new DirectChannel();
@@ -41,10 +43,12 @@ public class MqttConfig {
     @Bean
     @ServiceActivator(inputChannel = "mqttOutboundChannel")
     public MessageHandler outbound() {
-        return new MqttPahoMessageHandler("spring-boot-pub", mqttClientFactory());
+        MqttPahoMessageHandler handler = new MqttPahoMessageHandler("monsai-pub", mqttClientFactory());
+        handler.setDefaultTopic("monsai/default");
+        return handler;
     }
 
-    // 2. Canal de Entrada
+    // --- ENTRADA ---
     @Bean
     public MessageChannel mqttInputChannel() {
         return new DirectChannel();
@@ -53,8 +57,22 @@ public class MqttConfig {
     @Bean
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter("spring-boot-sub", mqttClientFactory(), "monsai/sensores");
+                new MqttPahoMessageDrivenChannelAdapter("monsai-sub", mqttClientFactory(), "monsai/sensores", "monsai/alertas");
         adapter.setOutputChannel(mqttInputChannel());
+        adapter.setErrorChannelName("mqttErrorChannel"); // Vincula o erro ao canal abaixo
         return adapter;
+    }
+
+    // --- TRATAMENTO DE ERRO PADRONIZADO (AACI-121) ---
+    @Bean
+    public MessageChannel mqttErrorChannel() {
+        return new DirectChannel();
+    }
+
+    @ServiceActivator(inputChannel = "mqttErrorChannel")
+    public void handleMqttError(Message<?> message) {
+        // Log limpo e profissional
+        System.err.println("🚨 [MONSAI - MQTT ERROR]: Falha na comunicação com o Broker.");
+        System.err.println("Causa/Payload: " + message.getPayload());
     }
 }
