@@ -10,6 +10,7 @@ public class UsuarioCreateDTO{
         private String nome;
         private String email;
         private String senha;
+        private String cpf;
         @Enumerated(EnumType.STRING)
         private TipoUsuario tipoUsuario;
         private Long asiloId;

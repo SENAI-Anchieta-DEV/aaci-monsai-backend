@@ -32,6 +32,7 @@ public class UsuarioService {
         novoUsuario.setNome(dto.getNome());
         novoUsuario.setEmail(dto.getEmail());
         novoUsuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+        novoUsuario.setCpf(dto.getCpf());
         novoUsuario.setTipo(dto.getTipoUsuario());
         novoUsuario.setAsilo(asilo);
 
