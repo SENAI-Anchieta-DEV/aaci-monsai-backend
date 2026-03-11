@@ -1,4 +1,4 @@
-package com.senai.monsai.interfaces.controller;
+package com.senai.monsai.ui_interface.controller;
 
 import com.senai.monsai.application.dto.AsiloCreateDTO;
 import com.senai.monsai.application.service.AsiloService;

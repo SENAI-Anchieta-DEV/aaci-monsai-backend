@@ -1,5 +1,6 @@
 package com.senai.monsai.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -20,8 +21,10 @@ public class Idoso {
     private String email;
     @ManyToOne
     @JoinColumn(name = "asilo_id")
+    @JsonIgnore
     private Asilo asilo;
-    @OneToOne
+
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "dispositivo_id")
     private Dispositivo dispositivo;
 }

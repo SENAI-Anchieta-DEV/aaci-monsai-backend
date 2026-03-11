@@ -2,6 +2,7 @@ package com.senai.monsai.application.service;
 import com.senai.monsai.application.dto.UsuarioCreateDTO;
 import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.enums.TipoUsuario;
 import com.senai.monsai.domain.repository.AsiloRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,14 +18,14 @@ public class UsuarioService {
     private final AsiloRepository asiloRepository;
 
     public Usuario criarUsuario(UsuarioCreateDTO dto) {
-        Asilo asilo = asiloRepository.findById(dto.getAsiloId())
+        Asilo asilo = asiloRepository.findById(dto.asiloId())
                 .orElseThrow(() -> new RuntimeException("Asilo não encontrado"));
 
         Usuario novoUsuario = new Usuario();
-        novoUsuario.setNome(dto.getNome());
-        novoUsuario.setEmail(dto.getEmail());
-        novoUsuario.setSenha(passwordEncoder.encode(dto.getSenha())); // Sempre encripte!
-        // novoUsuario.setTipo(TipoUsuario.valueOf(dto.getTipoUsuario())); // Assumindo que você tem um Enum
+        novoUsuario.setNome(dto.nome());
+        novoUsuario.setEmail(dto.email());
+        novoUsuario.setSenha(passwordEncoder.encode(dto.senha())); // Sempre encripte!
+        novoUsuario.setTipo(dto.tipoUsuario()); // Assumindo que você tem um Enum
         novoUsuario.setAsilo(asilo);
 
         return usuarioRepository.save(novoUsuario);

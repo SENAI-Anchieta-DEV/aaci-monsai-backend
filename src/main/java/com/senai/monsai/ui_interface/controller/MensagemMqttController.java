@@ -26,4 +26,5 @@ public class MensagemMqttController {
         mqttService.publicarTelemetria(dto);
         return ResponseEntity.ok("Simulação disparada com sucesso.");
     }
-*/}
+*/
+}
