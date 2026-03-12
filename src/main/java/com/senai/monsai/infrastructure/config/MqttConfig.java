@@ -57,7 +57,7 @@ public class MqttConfig {
     @Bean
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter("monsai-sub", mqttClientFactory(), "monsai/sensores", "monsai/alertas");
+                new MqttPahoMessageDrivenChannelAdapter("monsai-sub", mqttClientFactory(), "monsai/telemetria", "monsai/alertas");
         adapter.setOutputChannel(mqttInputChannel());
         adapter.setErrorChannelName("mqttErrorChannel"); // Vincula o erro ao canal abaixo
         return adapter;
