@@ -25,15 +25,15 @@ public class UsuarioService {
     private final AsiloRepository asiloRepository;
 
     public Usuario criarUsuario(UsuarioCreateDTO dto) {
-        Asilo asilo = asiloRepository.findById(dto.getAsiloId())
-                .orElseThrow(() -> new AsiloNaoEncontradoException(dto.getAsiloId()));
+        Asilo asilo = asiloRepository.findById(dto.asiloId())
+                .orElseThrow(() -> new AsiloNaoEncontradoException(dto.asiloId()));
 
         Usuario novoUsuario = new Usuario();
-        novoUsuario.setNome(dto.getNome());
-        novoUsuario.setEmail(dto.getEmail());
-        novoUsuario.setSenha(passwordEncoder.encode(dto.getSenha()));
-        novoUsuario.setCpf(dto.getCpf());
-        novoUsuario.setTipo(dto.getTipoUsuario());
+        novoUsuario.setNome(dto.nome());
+        novoUsuario.setEmail(dto.email());
+        novoUsuario.setSenha(passwordEncoder.encode(dto.senha()));
+        novoUsuario.setCpf(dto.cpf());
+        novoUsuario.setTipo(dto.tipoUsuario());
         novoUsuario.setAsilo(asilo);
 
         return usuarioRepository.save(novoUsuario);
@@ -44,7 +44,7 @@ public class UsuarioService {
     public void atualizarSenha(Long idUsuario, AtualizarSenhaDTO dto) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(RecursoNaoEncontradoException::new);
-        usuario.setSenha(passwordEncoder.encode(dto.getNovaSenha()));
+        usuario.setSenha(passwordEncoder.encode(dto.novaSenha()));
         usuarioRepository.save(usuario);
     }
     public void vincularIdoso(Long idUsuario, Long idIdoso) {

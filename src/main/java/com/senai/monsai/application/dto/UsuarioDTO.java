@@ -1,4 +1,13 @@
 package com.senai.monsai.application.dto;
 
-public class UsuarioDTO {
-}
+import com.senai.monsai.domain.enums.TipoUsuario;
+
+public record UsuarioDTO(
+        Long usuarioId,
+        String nome,
+        String email,
+        String cpf,
+        TipoUsuario tipo,
+        Long asiloId,
+        boolean ativo
+) {}

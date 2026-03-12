@@ -31,15 +31,13 @@ public class IdosoService {
         if (asiloDoGestor == null) {
             throw new RuntimeException("Este usuário não está vinculado a nenhum asilo.");
         }
-
         Pulseira pulseira = new Pulseira();
-        pulseira.setSerial(dto.getSerialPulseira());
+        pulseira.setSerial(dto.serialPulseira());
         pulseira = pulseiraRepository.save(pulseira);
-
         Idoso idoso = new Idoso();
-        idoso.setNome(dto.getNome());
-        idoso.setCpf(dto.getCpf());
-        idoso.setEmail(dto.getEmail());
+        idoso.setNome(dto.nome());
+        idoso.setCpf(dto.cpf());
+        idoso.setEmail(dto.email());
         idoso.setPulseira(pulseira);
         idoso.setAsilo(asiloDoGestor);
 

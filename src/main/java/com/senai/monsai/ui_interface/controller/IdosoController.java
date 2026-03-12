@@ -37,7 +37,7 @@ public class IdosoController {
             @ApiResponse(responseCode = "403", description = "Acesso negado (Apenas Gestores podem criar)"),
             @ApiResponse(responseCode = "409", description = "Conflito: CPF já cadastrado")
     })
-    public ResponseEntity<Idoso> criarIdoso(@Valid @RequestBody IdosoCreateDTO dto) {
+    public ResponseEntity<Idoso> criarIdoso(@Valid @RequestBody IdosoCreateDTO dto) { //valid adicionado
         return ResponseEntity.status(HttpStatus.CREATED).body(idosoService.criarIdoso(dto));
     }
 
