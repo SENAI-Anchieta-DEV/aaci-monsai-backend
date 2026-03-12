@@ -1,8 +1,8 @@
 package com.senai.monsai.application.dto;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-public class AtualizarSenhaDTO {
-    private String novaSenha;
-}
+public record AtualizarSenhaDTO(
+        @NotBlank(message = "A nova senha não pode ser vazia.")
+        String novaSenha
+) {}
