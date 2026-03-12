@@ -16,7 +16,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.time.LocalDateTime;
 
-@RestControllerAdvice
+@RestControllerAdvice // eu preferi o RestControllerAdvice por ser mais moderno
 public class GlobalExceptionHandler {
 
     // =======================================================
