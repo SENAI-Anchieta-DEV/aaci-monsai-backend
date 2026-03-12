@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @RestControllerAdvice // eu preferi o RestControllerAdvice por ser mais moderno
 public class GlobalExceptionHandler {
 
-    // =======================================================
+    // ======================================================= //essa trativa de erros 404, 400, 500 etc eu já tinha feito ao criar a classe
     // 404 NOT FOUND - Recurso não encontrado (Idoso, Usuário, etc)
     // =======================================================
     @ExceptionHandler(RecursoNaoEncontradoException.class)
