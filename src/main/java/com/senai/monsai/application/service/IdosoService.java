@@ -5,6 +5,7 @@ import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Pulseira;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
 import com.senai.monsai.domain.exception.RegraNegocioException;
 import com.senai.monsai.domain.repository.IdosoRepository;
@@ -36,7 +37,7 @@ public class IdosoService {
             throw new RegraNegocioException("Este usuário não está vinculado a nenhum asilo.");
         }
         if (idosoRepository.existsByCpf(dto.cpf())) {
-            throw new RegraNegocioException("Já existe um idoso cadastrado com este CPF neste asilo.");
+            throw new RecursoDuplicadoException("Já existe um idoso cadastrado com este CPF neste asilo.");
         }
 
         Pulseira pulseira = new Pulseira();

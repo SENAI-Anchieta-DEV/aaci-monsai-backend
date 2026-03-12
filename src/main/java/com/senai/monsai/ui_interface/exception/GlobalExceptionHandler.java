@@ -1,5 +1,6 @@
 package com.senai.monsai.ui_interface.exception;
 
+import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
 import com.senai.monsai.domain.exception.RegraNegocioException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -40,11 +41,11 @@ public class GlobalExceptionHandler {
     }
 
     // =======================================================
-    // 409 CONFLICT - Conflito no banco (E-mail/CPF duplicado)
+    // 409 CONFLICT - Recurso Duplicado (Exceção de Domínio)
     // =======================================================
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Erro de conflito de dados. Possivelmente um registro duplicado (ex: E-mail ou CPF já em uso).");
+    @ExceptionHandler(RecursoDuplicadoException.class)
+    public ProblemDetail handleRecursoDuplicado(RecursoDuplicadoException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problemDetail.setProperty("timestamp", LocalDateTime.now());
         return problemDetail;
     }
