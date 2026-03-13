@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // =======================================================
+    // ======================================================= //documentado cada erro
     // 404 NOT FOUND - Recurso não encontrado (Idoso, Usuário, etc)
     // =======================================================
     @ExceptionHandler(RecursoNaoEncontradoException.class)
