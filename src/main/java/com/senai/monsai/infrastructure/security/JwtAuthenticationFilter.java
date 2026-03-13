@@ -17,7 +17,13 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
+    /**
+     * Filtro responsável por interceptar todas as requisições HTTP
+     * e verificar se existe um token JWT válido no header Authorization.
+     *
+     * Caso o token seja válido, o usuário é autenticado no contexto
+     * do Spring Security.
+     */
     private final JwtService jwtService;
     private final UsuarioDetailsService userDetailsService;
 

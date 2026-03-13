@@ -16,7 +16,13 @@ public class JwtService {
 
     private final Key key;
     private final long expirationSeconds;
-
+    /**
+     * Gera um token JWT contendo:
+     * - email do usuário (subject)
+     * - role do usuário
+     * - data de emissão
+     * - data de expiração
+     */
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
             @Value("${security.jwt.expiration:3600}") long expirationSeconds) {
