@@ -1,8 +1,11 @@
 package com.senai.monsai.application.dto;
 
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@Data
-public class AtualizarSenhaDTO {
-    private String novaSenha;
-}
+@Schema(description = "DTO utilizado para atualização da senha do usuário")
+public record AtualizarSenhaDTO(
+
+        @Schema(description = "Nova senha do usuário", example = "NovaSenha123", required = true)
+        String novaSenha
+
+) {}

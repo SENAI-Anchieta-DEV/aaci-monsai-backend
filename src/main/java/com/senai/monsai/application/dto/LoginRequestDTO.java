@@ -1,4 +1,14 @@
 package com.senai.monsai.application.dto;
 
-public record LoginRequestDTO(String email, String senha) {
-}
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "DTO utilizado para autenticação do usuário")
+public record LoginRequestDTO(
+
+        @Schema(description = "Email do usuário", example = "usuario@email.com", required = true)
+        String email,
+
+        @Schema(description = "Senha do usuário", example = "123456", required = true)
+        String senha
+
+) {}
