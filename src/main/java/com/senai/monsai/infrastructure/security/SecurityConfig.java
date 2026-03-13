@@ -14,9 +14,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -28,27 +25,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                // 1. Desativa o CSRF (necessário para testes com POST/Axios)
-                .csrf(csrf -> csrf.disable())
-
-                // 2. Configura o CORS explicitamente dentro do Security
-                .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:3000"));
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(List.of("*"));
-                    config.setAllowCredentials(true);
-                    return config;
-                }))
-
-                // 3. Libera os caminhos da API
+        return http
+                // Sintaxe atualizada para desativar o CSRF no Spring Boot 3+
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/telemetria/**").permitAll() // Libera seu endpoint
-                        .anyRequest().permitAll() // Libera o resto por enquanto para você não travar
-                );
-
-        return http.build();
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
