@@ -5,6 +5,7 @@ import com.senai.monsai.domain.entity.Dispositivo;
 import com.senai.monsai.domain.entity.MensagemMqtt;
 import com.senai.monsai.domain.repository.DispositivoRepository;
 import com.senai.monsai.domain.repository.MensagemMqttRepository;
+import com.senai.monsai.ui_interface.controller.TelemetriaController;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class TelemetriaService {
     public void processarTelemetria(TelemetriaDTO dto) {
         // 1. Buscar o dispositivo (Pelo pulseira_id do JSON)
         Dispositivo dispositivo = dispositivoRepository.findById(dto.pulseiraId())
-                .orElseThrow(() -> new RuntimeException("🚨 Alerta: Pulseira " + dto.pulseiraId() + " não cadastrada!"));
+                .orElseThrow(() -> new RuntimeException("Alerta: Pulseira " + dto.pulseiraId() + " não cadastrada!"));
         // 2. Validação de Segurança
         // Verifica se a pulseira pertence ao idoso que ela diz estar monitorando
         if (!dispositivo.getIdoso().getIdoso_id().equals(dto.idosoId())) {
@@ -56,7 +57,7 @@ public class TelemetriaService {
 
         mensagemRepository.save(historico);
 
-        System.out.println("✅ Telemetria processada com sucesso para o Idoso: " + dto.idosoId());
+        System.out.println("Telemetria processada com sucesso para o Idoso: " + dto.idosoId());
     }
 
 

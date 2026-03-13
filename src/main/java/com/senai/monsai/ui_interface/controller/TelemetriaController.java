@@ -2,6 +2,7 @@ package com.senai.monsai.ui_interface.controller;
 
 import com.senai.monsai.application.dto.TelemetriaDTO;
 import com.senai.monsai.application.service.TelemetriaService;
+import com.senai.monsai.infrastructure.config.MqttGateway;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -11,16 +12,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/telemetria")
+@RequestMapping("/api/telemetria")
+@CrossOrigin(origins = "*")
 public class TelemetriaController {
     @Autowired
     private TelemetriaService telemetriaService;
+
+    @Autowired
+    private MqttGateway mqttGateway;
 
     @PostMapping
     @Operation(summary = "Registra telemetria",
@@ -57,9 +59,33 @@ public class TelemetriaController {
             )
     )
     public ResponseEntity<String> receberTelemetria(@Valid @RequestBody TelemetriaDTO dto) {
-        // Chamada do service que você acabou de criar
         telemetriaService.processarTelemetria(dto);
 
         return ResponseEntity.ok("Dados de telemetria recebidos com sucesso!");
+    }
+
+    // Variável temporária para guardar o último objeto DTO que chegou
+    private static TelemetriaDTO ultimaTelemetria = null;
+
+    // AACI-182: Endpoint que o React vai chamar para atualizar a tela
+    @GetMapping("/ultima")
+    public TelemetriaDTO getUltimaTelemetria() {
+        return ultimaTelemetria;
+    }
+
+    // Este método deve ser chamado pela sua classe que escuta o MQTT
+    public static void atualizarDados(TelemetriaDTO novoDto) {
+        ultimaTelemetria = novoDto;
+    }
+
+    @PostMapping("/comando-led")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<String> enviarComando() {
+        System.out.println("🚀 [JAVA]: Disparando comando LIGAR_LED via Gateway...");
+
+        // Esta linha é a que faz a mágica e manda para o Broker!
+        mqttGateway.sendToMqtt("LIGAR_LED", "monsai/comandos");
+
+        return ResponseEntity.ok("Comando enviado!");
     }
 }
