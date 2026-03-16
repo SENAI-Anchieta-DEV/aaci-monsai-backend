@@ -29,26 +29,15 @@ public class UsuarioService {
     private final AsiloRepository asiloRepository;
 
     public Usuario criarUsuario(UsuarioCreateDTO dto) {
-        // 1. Busca o asilo (Lança Erro 404 se não achar)
         Asilo asilo = asiloRepository.findById(dto.asiloId())
                 .orElseThrow(() -> new AsiloNaoEncontradoException(dto.asiloId()));
-
-        // 2. Regra de Negócio: Bloqueia E-mail duplicado (Lança Erro 409)
-        if (usuarioRepository.existsByEmail(dto.email())) {
-            throw new RecursoDuplicadoException("Já existe um usuário cadastrado com este e-mail.");
-        }
-
-        // 3. Regra de Negócio: Bloqueia CPF duplicado (Lança Erro 409)
-        if (usuarioRepository.existsByCpf(dto.cpf())) {
-            throw new RecursoDuplicadoException("Já existe um usuário cadastrado com este CPF.");
-        }
 
         Usuario novoUsuario = new Usuario();
         novoUsuario.setNome(dto.nome());
         novoUsuario.setEmail(dto.email());
         novoUsuario.setSenha(passwordEncoder.encode(dto.senha()));
         novoUsuario.setCpf(dto.cpf());
-        novoUsuario.setTipo(TipoUsuario.valueOf(dto.tipoUsuario()));
+        novoUsuario.setTipo(dto.tipoUsuario());
         novoUsuario.setAsilo(asilo);
 
         return usuarioRepository.save(novoUsuario);
@@ -60,8 +49,7 @@ public class UsuarioService {
 
     public void atualizarSenha(Long idUsuario, AtualizarSenhaDTO dto) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado com o ID fornecido."));
-
+                .orElseThrow(RecursoNaoEncontradoException::new);
         usuario.setSenha(passwordEncoder.encode(dto.novaSenha()));
         usuarioRepository.save(usuario);
     }

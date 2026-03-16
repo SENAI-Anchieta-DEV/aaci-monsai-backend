@@ -39,11 +39,9 @@ public class IdosoService {
         if (idosoRepository.existsByCpf(dto.cpf())) {
             throw new RecursoDuplicadoException("Já existe um idoso cadastrado com este CPF neste asilo.");
         }
-
         Pulseira pulseira = new Pulseira();
         pulseira.setSerial(dto.serialPulseira());
         pulseira = pulseiraRepository.save(pulseira);
-
         Idoso idoso = new Idoso();
         idoso.setNome(dto.nome());
         idoso.setCpf(dto.cpf());

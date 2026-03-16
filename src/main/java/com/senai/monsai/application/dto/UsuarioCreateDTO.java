@@ -1,16 +1,16 @@
 package com.senai.monsai.application.dto;
 
+import com.senai.monsai.domain.enums.TipoUsuario;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-// Importe o seu Enum TipoUsuario aqui se necessário
 
 public record UsuarioCreateDTO(
-        @NotBlank(message = "O nome é obrigatório.")
+        @NotBlank(message = "O nome não pode estar em branco.")
         String nome,
 
         @NotBlank(message = "O e-mail é obrigatório.")
-        @Email(message = "Formato de e-mail inválido.")
+        @Email(message = "O formato do e-mail é inválido.")
         String email,
 
         @NotBlank(message = "A senha é obrigatória.")
@@ -20,7 +20,7 @@ public record UsuarioCreateDTO(
         String cpf,
 
         @NotNull(message = "O tipo de usuário é obrigatório.")
-        String tipoUsuario, // Se for um Enum no seu projeto, mude o tipo aqui
+        TipoUsuario tipoUsuario,
 
         @NotNull(message = "O ID do asilo é obrigatório.")
         Long asiloId

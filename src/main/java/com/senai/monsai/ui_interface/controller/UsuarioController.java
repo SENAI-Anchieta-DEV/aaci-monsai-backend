@@ -38,7 +38,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "403", description = "Acesso negado (Apenas Gestores/Admins podem criar)"),
             @ApiResponse(responseCode = "409", description = "Conflito: CPF ou E-mail já cadastrados")
     })
-    public ResponseEntity<Usuario> criarUsuario(@Valid @RequestBody UsuarioCreateDTO dto) { // <-- @Valid adicionado
+    public ResponseEntity<Usuario> criarUsuario(@Valid @RequestBody UsuarioCreateDTO dto) { //valid adicionado
         Usuario novoUsuario = usuarioService.criarUsuario(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoUsuario);
     }
