@@ -30,7 +30,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos (ex: e-mail em branco)"),
             @ApiResponse(responseCode = "401", description = "Credenciais inválidas (E-mail ou senha incorretos)")
     })
-    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto) { //valid adicionado
         LoginResponseDTO response = authService.autenticar(dto);
         return ResponseEntity.ok(response);
     }

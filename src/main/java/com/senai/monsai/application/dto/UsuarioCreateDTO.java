@@ -1,27 +1,27 @@
 package com.senai.monsai.application.dto;
 
 import com.senai.monsai.domain.enums.TipoUsuario;
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-@Schema(description = "DTO utilizado para criação de usuários no sistema")
 public record UsuarioCreateDTO(
-
-        @Schema(description = "Nome completo do usuário", example = "João da Silva", required = true)
+        @NotBlank(message = "O nome não pode estar em branco.")
         String nome,
 
-        @Schema(description = "Email do usuário", example = "joao@email.com", required = true)
+        @NotBlank(message = "O e-mail é obrigatório.")
+        @Email(message = "O formato do e-mail é inválido.")
         String email,
 
-        @Schema(description = "Senha do usuário", example = "123456", required = true)
+        @NotBlank(message = "A senha é obrigatória.")
         String senha,
 
-        @Schema(description = "CPF do usuário", example = "123.456.789-00", required = true)
+        @NotBlank(message = "O CPF é obrigatório.")
         String cpf,
 
-        @Schema(description = "Tipo de usuário do sistema", example = "ADMIN")
+        @NotNull(message = "O tipo de usuário é obrigatório.")
         TipoUsuario tipoUsuario,
 
-        @Schema(description = "ID do asilo associado ao usuário", example = "1")
+        @NotNull(message = "O ID do asilo é obrigatório.")
         Long asiloId
-
 ) {}

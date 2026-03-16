@@ -1,14 +1,13 @@
 package com.senai.monsai.application.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
-@Schema(description = "DTO utilizado para autenticação do usuário")
 public record AuthRequestDTO(
-
-        @Schema(description = "Email do usuário", example = "usuario@email.com", required = true)
+        @NotBlank(message = "O e-mail é obrigatório.")
+        @Email(message = "Formato de e-mail inválido.")
         String email,
 
-        @Schema(description = "Senha do usuário", example = "123456", required = true)
+        @NotBlank(message = "A senha é obrigatória.")
         String senha
-
 ) {}

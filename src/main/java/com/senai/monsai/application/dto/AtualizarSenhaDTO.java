@@ -1,11 +1,12 @@
 package com.senai.monsai.application.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
-@Schema(description = "DTO utilizado para atualização da senha do usuário")
-public record AtualizarSenhaDTO(
+public record AtualizarSenhaDTO (
 
-        @Schema(description = "Nova senha do usuário", example = "NovaSenha123", required = true)
-        String novaSenha
+    @NotBlank(message = "A nova senha é obrigatória.")
+    String novaSenha
+){
 
-) {}
+}
