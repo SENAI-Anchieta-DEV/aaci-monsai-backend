@@ -5,7 +5,9 @@ import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Pulseira;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
+import com.senai.monsai.domain.exception.RegraNegocioException;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.PulseiraRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
@@ -29,7 +31,10 @@ public class IdosoService {
         Asilo asiloDoGestor = gestor.getAsilo();
 
         if (asiloDoGestor == null) {
-            throw new RuntimeException("Este usuário não está vinculado a nenhum asilo.");
+            throw new RegraNegocioException("Este usuário não está vinculado a nenhum asilo.");
+        }
+        if (idosoRepository.existsByCpf(dto.getCpf())) {
+            throw new RecursoDuplicadoException("Já existe um idoso cadastrado com este CPF.");
         }
 
         Pulseira pulseira = new Pulseira();

@@ -5,6 +5,7 @@ import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
 import com.senai.monsai.domain.exception.AsiloNaoEncontradoException;
+import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.repository.AsiloRepository;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
@@ -27,7 +28,12 @@ public class UsuarioService {
     public Usuario criarUsuario(UsuarioCreateDTO dto) {
         Asilo asilo = asiloRepository.findById(dto.getAsiloId())
                 .orElseThrow(() -> new AsiloNaoEncontradoException(dto.getAsiloId()));
-
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new RecursoDuplicadoException("Já existe um usuário cadastrado com este e-mail.");
+        }
+        if (usuarioRepository.existsByCpf(dto.getCpf())) {
+            throw new RecursoDuplicadoException("Já existe um usuário cadastrado com este CPF.");
+        }
         Usuario novoUsuario = new Usuario();
         novoUsuario.setNome(dto.getNome());
         novoUsuario.setEmail(dto.getEmail());
