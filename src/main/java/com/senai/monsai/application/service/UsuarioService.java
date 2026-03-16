@@ -6,6 +6,7 @@ import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
 import com.senai.monsai.domain.exception.AsiloNaoEncontradoException;
 import com.senai.monsai.domain.exception.RecursoDuplicadoException;
+import com.senai.monsai.domain.exception.UsuarioNaoEncontradoException;
 import com.senai.monsai.domain.repository.AsiloRepository;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
@@ -49,18 +50,17 @@ public class UsuarioService {
     }
     public void atualizarSenha(Long idUsuario, AtualizarSenhaDTO dto) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(RecursoNaoEncontradoException::new);
+                .orElseThrow(UsuarioNaoEncontradoException::new);
         usuario.setSenha(passwordEncoder.encode(dto.getNovaSenha()));
         usuarioRepository.save(usuario);
     }
     public void vincularIdoso(Long idUsuario, Long idIdoso) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(RecursoNaoEncontradoException::new);
+                .orElseThrow(UsuarioNaoEncontradoException::new);
 
         Idoso idoso = idosoRepository.findById(idIdoso)
-                .orElseThrow(RecursoNaoEncontradoException::new);
+                .orElseThrow(UsuarioNaoEncontradoException::new);
 
-        // Se o idoso ainda não estiver na lista desse usuário, a gente adiciona
         if (!usuario.getIdosos().contains(idoso)) {
             usuario.getIdosos().add(idoso);
             usuarioRepository.save(usuario);
@@ -69,10 +69,10 @@ public class UsuarioService {
 
     public void desvincularIdoso(Long idUsuario, Long idIdoso) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(RecursoNaoEncontradoException::new);
+                .orElseThrow(UsuarioNaoEncontradoException::new);
 
         Idoso idoso = idosoRepository.findById(idIdoso)
-                .orElseThrow(RecursoNaoEncontradoException::new);
+                .orElseThrow(UsuarioNaoEncontradoException::new);
         if (usuario.getIdosos().contains(idoso)) {
             usuario.getIdosos().remove(idoso);
             usuarioRepository.save(usuario);
@@ -80,7 +80,7 @@ public class UsuarioService {
     }
     public void inativarUsuario(Long idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(RecursoNaoEncontradoException::new);
+                .orElseThrow(UsuarioNaoEncontradoException::new);
         usuario.setAtivo(false);
         usuario.getIdosos().clear();
         usuarioRepository.save(usuario);

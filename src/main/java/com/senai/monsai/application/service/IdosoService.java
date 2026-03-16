@@ -5,6 +5,7 @@ import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Pulseira;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.exception.IdosoNaoEncontradoException;
 import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
 import com.senai.monsai.domain.exception.RegraNegocioException;
@@ -55,7 +56,7 @@ public class IdosoService {
     }
     public void inativarIdoso(Long idIdoso) {
         Idoso idoso = idosoRepository.findById(idIdoso)
-                .orElseThrow(RecursoNaoEncontradoException::new);
+                .orElseThrow(IdosoNaoEncontradoException::new);
         idoso.setAtivo(false);
         if (idoso.getPulseira() != null) {
             idoso.setPulseira(null);
