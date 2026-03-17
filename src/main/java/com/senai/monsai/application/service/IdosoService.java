@@ -5,7 +5,9 @@ import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Pulseira;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
+import com.senai.monsai.domain.exception.RegraNegocioException;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.PulseiraRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
@@ -25,11 +27,17 @@ public class IdosoService {
 
     public Idoso criarIdoso(IdosoCreateDTO dto) {
         String emailGestorLogado = SecurityContextHolder.getContext().getAuthentication().getName();
-        Usuario gestor = usuarioRepository.findByEmail(emailGestorLogado).orElseThrow();
+
+        Usuario gestor = usuarioRepository.findByEmail(emailGestorLogado)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado no sistema."));
+
         Asilo asiloDoGestor = gestor.getAsilo();
 
         if (asiloDoGestor == null) {
-            throw new RuntimeException("Este usuário não está vinculado a nenhum asilo.");
+            throw new RegraNegocioException("Este usuário não está vinculado a nenhum asilo.");
+        }
+        if (idosoRepository.existsByCpf(dto.cpf())) {
+            throw new RecursoDuplicadoException("Já existe um idoso cadastrado com este CPF neste asilo.");
         }
         Pulseira pulseira = new Pulseira();
         pulseira.setSerial(dto.serialPulseira());
@@ -43,12 +51,15 @@ public class IdosoService {
 
         return idosoRepository.save(idoso);
     }
+
     public List<Idoso> listarTodos() {
         return idosoRepository.findAll();
     }
+
     public void inativarIdoso(Long idIdoso) {
         Idoso idoso = idosoRepository.findById(idIdoso)
                 .orElseThrow(RecursoNaoEncontradoException::new);
+
         idoso.setAtivo(false);
         if (idoso.getPulseira() != null) {
             idoso.setPulseira(null);
@@ -60,5 +71,4 @@ public class IdosoService {
         }
         idosoRepository.save(idoso);
     }
-
 }
