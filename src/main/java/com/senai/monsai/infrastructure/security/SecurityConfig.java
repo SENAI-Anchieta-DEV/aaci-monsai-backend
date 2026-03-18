@@ -28,6 +28,7 @@ public class SecurityConfig {
         return http
                 // Sintaxe atualizada para desativar o CSRF no Spring Boot 3+
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(org.springframework.security.config.Customizer.withDefaults())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
