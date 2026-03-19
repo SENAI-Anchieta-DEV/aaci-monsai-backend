@@ -80,7 +80,7 @@ public class MqttConfig {
         System.err.println("Causa/Payload: " + message.getPayload());
     }
 
-    @ServiceActivator(inputChannel = "mqttInputChannel")
+    /* @ServiceActivator(inputChannel = "mqttInputChannel")
     public void handleMessage(Message<?> message) {
         String payload = message.getPayload().toString();
         String topic = message.getHeaders().get("mqtt_receivedTopic").toString();
@@ -98,5 +98,5 @@ public class MqttConfig {
         } catch (Exception e) {
             System.err.println("Erro ao converter JSON do MQTT: " + e.getMessage());
         }
-    }
+    } */
 }

@@ -7,6 +7,7 @@ import com.senai.monsai.application.dto.TelemetriaDTO;
 import com.senai.monsai.domain.entity.MensagemMqtt;
 import com.senai.monsai.domain.repository.MensagemMqttRepository;
 import com.senai.monsai.infrastructure.config.MqttGateway;
+import com.senai.monsai.ui_interface.controller.TelemetriaController;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -19,23 +20,26 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class MensagemMqttService {
-
     private final TelemetriaService telemetriaService;
+    private final TelemetriaController telemetriaController;
 
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public void escutarHardware(Message<String> message) {
         try {
-            // Instanciamos o mapper aqui direto para evitar qualquer erro do Spring
             ObjectMapper mapper = new ObjectMapper();
+            // 🟢 Adicione isso para o Jackson entender as datas do Java 8
+            mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
-            // Pega o JSON que chegou do MQTT (hardware) e converte pro DTO
             TelemetriaDTO dto = mapper.readValue(message.getPayload(), TelemetriaDTO.class);
 
-            // Manda pro Service principal fazer o trabalho pesado (validar e salvar)
+            // 1. Salva no Banco (Histórico)
             telemetriaService.processarTelemetria(dto);
 
+            // 2. Atualiza a "Ultima Telemetria" para o React ver (Tempo Real)
+            telemetriaController.atualizarDados(dto);
+
         } catch (Exception e) {
-            System.err.println("Falha ao processar mensagem do hardware: " + e.getMessage());
+            System.err.println("Erro: " + e.getMessage());
         }
     }
 }
