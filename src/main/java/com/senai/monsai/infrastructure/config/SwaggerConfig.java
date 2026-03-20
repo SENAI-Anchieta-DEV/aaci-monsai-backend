@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
     @Bean
-    public OpenAPI oficinaOpenAPI() {
+    public OpenAPI oficinaOpenAPI() { //swagger feito
         return new OpenAPI()
                 .info(new Info()
                         .title("API - MONSAI")
