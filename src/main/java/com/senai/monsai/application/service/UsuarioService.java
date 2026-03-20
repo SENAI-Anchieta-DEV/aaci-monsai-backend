@@ -61,7 +61,6 @@ public class UsuarioService {
         Idoso idoso = idosoRepository.findById(idIdoso)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Idoso não encontrado."));
 
-        // Se o idoso ainda não estiver na lista desse usuário, a gente adiciona
         if (!usuario.getIdosos().contains(idoso)) {
             usuario.getIdosos().add(idoso);
             usuarioRepository.save(usuario);
