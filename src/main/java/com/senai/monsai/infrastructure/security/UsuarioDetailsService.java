@@ -12,7 +12,8 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UsuarioDetailsService implements UserDetailsService {
+public class
+UsuarioDetailsService implements UserDetailsService {
 
     private final UsuarioRepository repository;
 
@@ -21,10 +22,13 @@ public class UsuarioDetailsService implements UserDetailsService {
         var usuario = repository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
+        var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getTipo().name()));
+        System.out.println("DEBUG: Carregando usuário " + usuario.getEmail() + " com a role: " + authorities);
+
         return new User(
                 usuario.getEmail(),
                 usuario.getSenha(),
-                List.of(new SimpleGrantedAuthority("Tipo_" + usuario.getTipo().name()))
+                List.of(new SimpleGrantedAuthority(usuario.getTipo().name()))
         );
     }
 }

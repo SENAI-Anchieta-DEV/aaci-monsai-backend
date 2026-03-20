@@ -1,5 +1,4 @@
 package com.senai.monsai.application.dto;
-
 import com.senai.monsai.domain.enums.TipoUsuario;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

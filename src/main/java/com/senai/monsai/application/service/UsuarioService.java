@@ -1,100 +1,34 @@
 package com.senai.monsai.application.service;
-
-import com.senai.monsai.application.dto.AtualizarSenhaDTO;
 import com.senai.monsai.application.dto.UsuarioCreateDTO;
 import com.senai.monsai.domain.entity.Asilo;
-import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
 import com.senai.monsai.domain.enums.TipoUsuario;
-import com.senai.monsai.domain.exception.AsiloNaoEncontradoException;
-import com.senai.monsai.domain.exception.RecursoDuplicadoException;
-import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
-import com.senai.monsai.domain.exception.RegraNegocioException;
 import com.senai.monsai.domain.repository.AsiloRepository;
-import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final IdosoRepository idosoRepository;
     private final PasswordEncoder passwordEncoder;
     private final AsiloRepository asiloRepository;
 
     public Usuario criarUsuario(UsuarioCreateDTO dto) {
         Asilo asilo = asiloRepository.findById(dto.asiloId())
-                .orElseThrow(() -> new AsiloNaoEncontradoException(dto.asiloId()));
+                .orElseThrow(() -> new RuntimeException("Asilo não encontrado"));
 
         Usuario novoUsuario = new Usuario();
         novoUsuario.setNome(dto.nome());
         novoUsuario.setEmail(dto.email());
-        novoUsuario.setSenha(passwordEncoder.encode(dto.senha()));
-        novoUsuario.setCpf(dto.cpf());
-        novoUsuario.setTipo(dto.tipoUsuario());
+        novoUsuario.setSenha(passwordEncoder.encode(dto.senha())); // Sempre encripte!
+        novoUsuario.setTipo(dto.tipoUsuario()); // Assumindo que você tem um Enum
         novoUsuario.setAsilo(asilo);
 
         return usuarioRepository.save(novoUsuario);
     }
 
-    public List<Usuario> listarTodos() {
-        return usuarioRepository.findAll();
-    }
-
-    public void atualizarSenha(Long idUsuario, AtualizarSenhaDTO dto) {
-        Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(RecursoNaoEncontradoException::new);
-        usuario.setSenha(passwordEncoder.encode(dto.novaSenha()));
-        usuarioRepository.save(usuario);
-    }
-
-    public void vincularIdoso(Long idUsuario, Long idIdoso) {
-        Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado."));
-
-        Idoso idoso = idosoRepository.findById(idIdoso)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Idoso não encontrado."));
-
-        if (!usuario.getIdosos().contains(idoso)) {
-            usuario.getIdosos().add(idoso);
-            usuarioRepository.save(usuario);
-        } else {
-            // Opcional: Avisar que já está vinculado para não dar falso positivo pro Front
-            throw new RegraNegocioException("Este idoso já está vinculado a este usuário.");
-        }
-    }
-
-    public void desvincularIdoso(Long idUsuario, Long idIdoso) {
-        Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado."));
-
-        Idoso idoso = idosoRepository.findById(idIdoso)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Idoso não encontrado."));
-
-        if (usuario.getIdosos().contains(idoso)) {
-            usuario.getIdosos().remove(idoso);
-            usuarioRepository.save(usuario);
-        } else {
-            throw new RegraNegocioException("Este idoso não está vinculado a este usuário.");
-        }
-    }
-
-    public void inativarUsuario(Long idUsuario) {
-        Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado."));
-
-        if (!usuario.isAtivo()) {
-            throw new RegraNegocioException("Este usuário já encontra-se inativo no sistema.");
-        }
-
-        usuario.setAtivo(false);
-        usuario.getIdosos().clear();
-        usuarioRepository.save(usuario);
-    }
 }
