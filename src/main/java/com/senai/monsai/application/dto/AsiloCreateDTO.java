@@ -9,6 +9,6 @@ public record AsiloCreateDTO(
         @NotBlank(message = "O CNPJ é obrigatório.")
         String cnpj,
 
-        @NotBlank(message = "O CNPJ é obrigatório.")
+        @NotBlank(message = "O endereço é obrigatório.")
         String endereco
 ) {}

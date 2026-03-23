@@ -29,7 +29,6 @@ public class UsuarioService {
     private final AsiloRepository asiloRepository;
 
     public Usuario criarUsuario(UsuarioCreateDTO dto) {
-        // Trocamos o RuntimeException genérico pela nossa exceção de domínio
         Asilo asilo = asiloRepository.findById(dto.asiloId())
                 .orElseThrow(() -> new AsiloNaoEncontradoException(dto.asiloId()));
 

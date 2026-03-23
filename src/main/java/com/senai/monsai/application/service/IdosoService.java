@@ -1,6 +1,7 @@
 package com.senai.monsai.application.service;
 
 import com.senai.monsai.application.dto.IdosoCreateDTO;
+import com.senai.monsai.application.dto.IdosoUpdateDTO;
 import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Dispositivo;
@@ -25,7 +26,7 @@ public class IdosoService {
     private final IdosoRepository idosoRepository;
     private final PulseiraRepository pulseiraRepository;
     private final UsuarioRepository usuarioRepository;
-    private final AsiloRepository asiloRepository; // <-- Injetando o AsiloRepository
+    private final AsiloRepository asiloRepository;
 
     public Idoso criarIdoso(IdosoCreateDTO dto) {
         String emailUsuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -69,12 +70,50 @@ public class IdosoService {
 
         return idosoRepository.save(idoso);
     }
-    public List<Idoso> listarTodos() {
-        return idosoRepository.findAll();
-    }
+        public List<Idoso> listarTodos() {
+            String emailUsuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
+            Usuario usuarioLogado = usuarioRepository.findByEmail(emailUsuarioLogado)
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado."));
+
+            // Se o usuário não tem asilo (SuperAdmin), lista todo mundo
+            if (usuarioLogado.getAsilo() == null) {
+                return idosoRepository.findAll();
+            }
+
+            // Se for Gestor/Cuidador, lista SOMENTE os idosos do próprio asilo!
+            return idosoRepository.findByAsiloId(usuarioLogado.getAsilo().getId());
+        }
+
+        public Idoso atualizarIdoso(Long idIdoso, IdosoUpdateDTO dto) {
+            String emailUsuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
+            Usuario usuarioLogado = usuarioRepository.findByEmail(emailUsuarioLogado)
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado."));
+
+            Idoso idoso = idosoRepository.findById(idIdoso)
+                    .orElseThrow(IdosoNaoEncontradoException::new);
+
+            if (!idoso.isAtivo()) {
+                throw new RegraNegocioException("Não é possível editar os dados de um idoso inativo.");
+            }
+
+            // Validação de Segurança: O usuário logado NÃO PODE editar um idoso de outro asilo
+            if (usuarioLogado.getAsilo() != null && !usuarioLogado.getAsilo().getId().equals(idoso.getAsilo().getId())) {
+                throw new RegraNegocioException("Violação de segurança: Você não tem permissão para editar um idoso de outro asilo.");
+            }
+
+            // Se o CPF mudou na edição, verifica se o novo CPF já existe no banco
+            if (!idoso.getCpf().equals(dto.cpf()) && idosoRepository.existsByCpf(dto.cpf())) {
+                throw new RecursoDuplicadoException("Já existe outro idoso cadastrado com este CPF.");
+            }
+
+            idoso.setNome(dto.nome());
+            idoso.setCpf(dto.cpf());
+            idoso.setEmail(dto.email());
+
+            return idosoRepository.save(idoso);
+        }
 
     public void inativarIdoso(Long idIdoso) {
-        // Descobre quem está tentando inativar
         String emailUsuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario usuarioLogado = usuarioRepository.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado."));
