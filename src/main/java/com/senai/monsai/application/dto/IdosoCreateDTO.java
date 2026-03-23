@@ -14,5 +14,7 @@ public record IdosoCreateDTO(
         String email,
 
         @NotBlank(message = "O serial da pulseira é obrigatório.")
-        String serialDispositivo
+        String serialDispositivo,
+
+        Long asiloId
 ) {}

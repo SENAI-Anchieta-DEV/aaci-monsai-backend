@@ -19,7 +19,7 @@ public class IdosoController {
 
     @PostMapping
     @SecurityRequirement(name = "bearerAuth")
-   @PreAuthorize("hasRole('GESTOR')") // APENAS GESTOR PODE ACESSAR!
+   @PreAuthorize("hasRole('SUPERADMIN','GESTOR')")
     public ResponseEntity<Idoso> criarIdoso(@RequestBody IdosoCreateDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(idosoService.criarIdoso(dto));
     }

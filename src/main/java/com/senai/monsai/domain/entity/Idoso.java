@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+import java.util.ArrayList;
+
 @Entity
 @Data
 @SuperBuilder
@@ -14,11 +17,13 @@ public class Idoso {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idoso_id;
+    @Column(name = "idoso_id")
+    private Long id;
 
     private String nome;
     private String cpf;
     private String email;
+
     @ManyToOne
     @JoinColumn(name = "asilo_id")
     @JsonIgnore
@@ -27,4 +32,11 @@ public class Idoso {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "dispositivo_id")
     private Dispositivo dispositivo;
+
+    @Builder.Default
+    private boolean ativo = true;
+
+    @JsonIgnore
+    @ManyToMany(mappedBy = "idosos")
+    private List<Usuario> usuarios = new ArrayList<>();
 }

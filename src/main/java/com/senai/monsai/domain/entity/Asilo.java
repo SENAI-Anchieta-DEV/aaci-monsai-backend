@@ -9,14 +9,19 @@ import java.util.List;
 @Entity
 @Data
 public class Asilo {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long asilo_id;
+    @Column(name = "asilo_id")
+    private Long id;
+
     private String nome;
     private String cnpj;
     private String endereco;
+
     @JsonIgnore
     @OneToMany(mappedBy = "asilo")
     private List<Idoso> idosos;
+
     private boolean ativo;
 }

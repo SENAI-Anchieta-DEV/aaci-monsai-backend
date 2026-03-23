@@ -18,7 +18,8 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long usuarioId;
+    @Column(name = "usuario_id") // O banco continua vendo usuario_id
+    private Long id; // Mas no Java chamamos só de "id"
 
     private String nome;
 
@@ -35,6 +36,7 @@ public class Usuario {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asilo_id")
     private Asilo asilo;
+
     @Builder.Default
     @ManyToMany
     @JoinTable(
@@ -43,6 +45,7 @@ public class Usuario {
             inverseJoinColumns = @JoinColumn(name = "idoso_id")
     )
     private List<Idoso> idosos = new ArrayList<>();
+
     @Builder.Default
     private boolean ativo = true;
 }

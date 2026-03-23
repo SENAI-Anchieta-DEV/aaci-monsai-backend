@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ public class AsiloController {
 
     @PostMapping
     @Operation(summary = "Criar um novo Asilo", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<Asilo> criarAsilo(@RequestBody AsiloCreateDTO dto) {
         Asilo novoAsilo = asiloService.criarAsilo(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoAsilo);
