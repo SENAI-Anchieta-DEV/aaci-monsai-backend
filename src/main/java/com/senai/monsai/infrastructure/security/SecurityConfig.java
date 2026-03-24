@@ -47,4 +47,25 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+
+        // Permite explicitamente o seu frontend
+        configuration.setAllowedOrigins(java.util.List.of("http://localhost:3000"));
+
+        // Define os métodos permitidos
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        // Permite os headers necessários (incluindo o de autenticação que você usa)
+        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type"));
+
+        // Permite que o navegador envie cookies/auth headers
+        configuration.setAllowCredentials(true);
+
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }
