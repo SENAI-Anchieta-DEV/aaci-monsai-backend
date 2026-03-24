@@ -41,15 +41,14 @@ public class GlobalExceptionHandler {
     }
 
     // =======================================================
-    // 409 CONFLICT - Recurso Duplicado (Exceção de Domínio)
+    // 409 CONFLICT - Violação de Constraint no Banco de Dados (E-mail ou Serial único)
     // =======================================================
-    @ExceptionHandler(RecursoDuplicadoException.class)
-    public ProblemDetail handleRecursoDuplicado(RecursoDuplicadoException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Conflito de dados: Já existe um registro no banco de dados com esta mesma informação (ex: e-mail ou serial de dispositivo).");
         problemDetail.setProperty("timestamp", LocalDateTime.now());
         return problemDetail;
     }
-
     // =======================================================
     // 400 BAD REQUEST - Erros de validação do DTO (@NotBlank, @Email)
     // =======================================================
