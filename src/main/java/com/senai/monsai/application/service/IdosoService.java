@@ -54,6 +54,7 @@ public class IdosoService {
             throw new RecursoDuplicadoException("Já existe um idoso cadastrado com este CPF.");
         }
 
+
         Dispositivo dispositivo = new Dispositivo();
         dispositivo.setSerial(dto.serialDispositivo());
         dispositivo = pulseiraRepository.save(dispositivo);
@@ -106,6 +107,7 @@ public class IdosoService {
                 throw new RecursoDuplicadoException("Já existe outro idoso cadastrado com este CPF.");
             }
 
+
             idoso.setNome(dto.nome());
             idoso.setCpf(dto.cpf());
             idoso.setEmail(dto.email());
@@ -128,7 +130,7 @@ public class IdosoService {
 
         // 4. REGRA DE NEGÓCIO: Fronteira do Asilo (Cross-Tenant Leak)
         // O usuário logado NÃO PODE inativar um idoso de outro asilo!
-        if (!usuarioLogado.getAsilo().getId().equals(idoso.getAsilo().getId())) {
+        if (usuarioLogado.getAsilo() != null && !usuarioLogado.getAsilo().getId().equals(idoso.getAsilo().getId())) {
             throw new RegraNegocioException("Violação de segurança: Você não tem permissão para alterar dados de um idoso de outro asilo.");
         }
 
