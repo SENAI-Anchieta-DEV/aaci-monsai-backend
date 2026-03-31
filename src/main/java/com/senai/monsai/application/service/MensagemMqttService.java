@@ -1,45 +1,45 @@
 package com.senai.monsai.application.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.senai.monsai.application.dto.MensagemMqttDTO;
 import com.senai.monsai.application.dto.TelemetriaDTO;
-import com.senai.monsai.domain.entity.MensagemMqtt;
-import com.senai.monsai.domain.repository.MensagemMqttRepository;
-import com.senai.monsai.infrastructure.config.MqttGateway;
 import com.senai.monsai.ui_interface.controller.TelemetriaController;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j; // <-- Import do Logger
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MensagemMqttService {
+
     private final TelemetriaService telemetriaService;
-    private final TelemetriaController telemetriaController;
 
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public void escutarHardware(Message<String> message) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            // 🟢 Adicione isso para o Jackson entender as datas do Java 8
             mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
             TelemetriaDTO dto = mapper.readValue(message.getPayload(), TelemetriaDTO.class);
 
-            // 1. Salva no Banco (Histórico)
+            // 1. Salva no Banco e gera Alertas
             telemetriaService.processarTelemetria(dto);
 
-            // 2. Atualiza a "Ultima Telemetria" para o React ver (Tempo Real)
-            telemetriaController.atualizarDados(dto);
+            // 2. Atualiza a "Ultima Telemetria" para o React
+            TelemetriaController.atualizarDados(dto);
 
+        } catch (JsonProcessingException e) {
+            // Erro 1: A pulseira mandou um JSON mal formatado
+            log.error("[MQTT ERRO] Payload inválido ou mal formatado: {}. Erro: {}", message.getPayload(), e.getMessage());
+        } catch (SecurityException e) {
+            // Erro 2: Cross-Tenant Leak (Pulseira no idoso errado)
+            log.error("[MQTT SEGURANÇA] Tentativa de violação detectada: {}", e.getMessage());
         } catch (Exception e) {
-            System.err.println("Erro: " + e.getMessage());
+            // Erro 3: Qualquer outro erro genérico (Banco de dados fora, etc)
+            log.error("[MQTT FATAL] Falha inesperada ao processar telemetria: ", e);
         }
     }
 }

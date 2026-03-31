@@ -18,8 +18,7 @@ import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    // substitui a classe erro padrão apos lembrar da existencia de uma classe
-    // do spring que já fazia isso
+
     // =======================================================
     // 404 NOT FOUND - Recurso não encontrado (Idoso, Usuário, etc)
     // =======================================================
@@ -41,6 +40,16 @@ public class GlobalExceptionHandler {
     }
 
     // =======================================================
+    // 409 CONFLICT - Recurso Duplicado (Regra de Negócio)
+    // =======================================================
+    @ExceptionHandler(RecursoDuplicadoException.class)
+    public ProblemDetail handleRecursoDuplicado(RecursoDuplicadoException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problemDetail.setProperty("timestamp", LocalDateTime.now());
+        return problemDetail;
+    }
+
+    // =======================================================
     // 409 CONFLICT - Violação de Constraint no Banco de Dados (E-mail ou Serial único)
     // =======================================================
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -49,6 +58,7 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("timestamp", LocalDateTime.now());
         return problemDetail;
     }
+
     // =======================================================
     // 400 BAD REQUEST - Erros de validação do DTO (@NotBlank, @Email)
     // =======================================================
@@ -101,11 +111,21 @@ public class GlobalExceptionHandler {
     }
 
     // =======================================================
+    // 403 FORBIDDEN - Violação de Segurança (Ex: IoT Cross-Tenant Leak)
+    // =======================================================
+    @ExceptionHandler(SecurityException.class)
+    public ProblemDetail handleSecurityException(SecurityException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problemDetail.setProperty("timestamp", LocalDateTime.now());
+        return problemDetail;
+    }
+
+    // =======================================================
     // 500 INTERNAL SERVER ERROR - O "Catch-all" genérico
     // =======================================================
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
-        ex.printStackTrace(); // Útil para você ver o erro real no terminal
+        ex.printStackTrace();
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Ocorreu um erro interno inesperado no servidor.");
         problemDetail.setProperty("timestamp", LocalDateTime.now());
         return problemDetail;
