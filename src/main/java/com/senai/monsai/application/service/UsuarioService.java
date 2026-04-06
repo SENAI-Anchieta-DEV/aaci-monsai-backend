@@ -120,4 +120,10 @@ public class UsuarioService {
         usuario.getIdosos().clear();
         usuarioRepository.save(usuario);
     }
+
+    public List<Idoso> listarIdososVinculados(Long idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado."));
+        return usuario.getIdosos();
+    }
 }
