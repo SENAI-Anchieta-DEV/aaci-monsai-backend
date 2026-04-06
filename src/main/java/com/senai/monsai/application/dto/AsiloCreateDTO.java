@@ -1,3 +1,14 @@
 package com.senai.monsai.application.dto;
 
-public record AsiloCreateDTO(String nome, String cnpj, String endereco) {}
+import jakarta.validation.constraints.NotBlank;
+
+public record AsiloCreateDTO(
+        @NotBlank(message = "O nome do asilo é obrigatório.")
+        String nome,
+
+        @NotBlank(message = "O CNPJ é obrigatório.")
+        String cnpj,
+
+        @NotBlank(message = "O endereço é obrigatório.")
+        String endereco
+) {}

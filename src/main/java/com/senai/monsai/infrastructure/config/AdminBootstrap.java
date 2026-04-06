@@ -11,7 +11,10 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class AdminBootstrap implements CommandLineRunner {
-
+    /*
+        *  Usuario padrão do sistema, o super admin
+        *
+    * */
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
