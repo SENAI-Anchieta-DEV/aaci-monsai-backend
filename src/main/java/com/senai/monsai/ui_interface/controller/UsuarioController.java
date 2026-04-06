@@ -121,4 +121,20 @@ public class UsuarioController {
         usuarioService.inativarUsuario(id);
         return ResponseEntity.noContent().build(); // 204 No Content
     }
+    // ==========================================
+    // 7. LISTAR IDOSOS VINCULADOS AO USUÁRIO
+    // ==========================================
+    @GetMapping("/{idUsuario}/idosos")
+    @Operation(summary = "Listar idosos vinculados a um usuário específico", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR', 'FUNCIONARIO', 'FAMILIAR')") 
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de idosos retornada com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<List<Idoso>> listarIdososVinculados(@PathVariable Long idUsuario) {
+        // Nota: Certifique-se de que o objeto Idoso esteja importado corretamente
+        List<Idoso> idosos = usuarioService.listarIdososVinculados(idUsuario);
+        return ResponseEntity.ok(idosos);
+    }
 }
