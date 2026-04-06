@@ -3,6 +3,7 @@ package com.senai.monsai.ui_interface.controller;
 import com.senai.monsai.application.dto.AtualizarSenhaDTO;
 import com.senai.monsai.application.dto.UsuarioCreateDTO;
 import com.senai.monsai.application.service.UsuarioService;
+import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -133,7 +134,6 @@ public class UsuarioController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
     public ResponseEntity<List<Idoso>> listarIdososVinculados(@PathVariable Long idUsuario) {
-        // Nota: Certifique-se de que o objeto Idoso esteja importado corretamente
         List<Idoso> idosos = usuarioService.listarIdososVinculados(idUsuario);
         return ResponseEntity.ok(idosos);
     }
