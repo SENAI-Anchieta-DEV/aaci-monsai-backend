@@ -1,5 +1,7 @@
 # Etapa 1: Build da aplicação
 FROM maven:3.9-eclipse-temurin-17 AS build
+# Define o encoding do sistema para UTF-8
+ENV LANG=C.UTF-8
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
