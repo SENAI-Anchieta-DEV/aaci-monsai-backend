@@ -1,7 +1,7 @@
 services:
   - type: web
     name: aaci-monsai-backend
-    runtime: java
+    runtime: docker
     plan: free
     region: oregon
     buildCommand: ./mvnw clean package -DskipTests
