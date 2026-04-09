@@ -32,7 +32,7 @@ public class TelemetriaService {
     @Transactional
     public void processarTelemetria(TelemetriaDTO dto) {
         // 1. Buscar o dispositivo
-        Dispositivo dispositivo = dispositivoRepository.findById(dto.pulseiraId())
+        Dispositivo dispositivo = dispositivoRepository.findBySerial(dto.pulseiraId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Alerta: Dispositivo " + dto.pulseiraId() + " não cadastrado!"));
 
         // 2. Validação de Segurança (Cross-Tenant/Cross-Patient Leak)

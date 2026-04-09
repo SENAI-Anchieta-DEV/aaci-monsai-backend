@@ -67,7 +67,7 @@ public class TelemetriaController {
         // Se a pulseira for do idoso errado, o Service lançará uma SecurityException
         // O seu GlobalExceptionHandler deve capturar isso e devolver um erro 403 (Forbidden) ou 400 (Bad Request)
         telemetriaService.processarTelemetria(dto);
-
+        atualizarDados(dto);
         // Atualiza a variável em memória para o React (apenas para testes locais)
         atualizarDados(dto);
 
