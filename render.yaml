@@ -1,17 +1,29 @@
 services:
   - type: web
     name: aaci-monsai-backend
-    runtime: docker
+    runtime: docker # Alterado para Docker pois o Render não tem runtime Java nativo
     plan: free
     region: oregon
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java -jar target/*.jar
     autoDeployTrigger: commit
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
 
-      # --- Configurações do Banco de Dados (PostgreSQL no Render) ---
+      # --- Variáveis de Sistema do Banco (Necessárias para a URL abaixo) ---
+      - key: DATABASE_HOST
+        fromDatabase:
+          name: aaci-monsai-db
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: aaci-monsai-db
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: aaci-monsai-db
+          property: database
+
+      # --- Configurações do Banco de Dados ---
       - key: SPRING_DATASOURCE_URL
         value: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
       - key: SPRING_DATASOURCE_USERNAME
@@ -25,7 +37,7 @@ services:
 
       # --- Segurança e JWT ---
       - key: SECURITY_JWT_SECRET
-        generateValue: true # O Render gera uma chave segura automaticamente
+        generateValue: true
       - key: SECURITY_JWT_EXPIRATION
         value: "86400000"
 
@@ -37,11 +49,9 @@ services:
       - key: SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL
         value: "true"
 
-      # --- MQTT (Configurações de Produção) ---
-      # No Render, você não pode usar 'localhost'.
-      # Você precisará de um broker externo (como HiveMQ ou Mosquitto Cloud)
+      # --- MQTT ---
       - key: MQTT_BROKER_URL
-        sync: false # Você preencherá manualmente no painel do Render
+        sync: false 
       - key: MQTT_TOPIC
         value: monsai/telemetria
       - key: MQTT_CLIENT_ID
