@@ -51,7 +51,11 @@ services:
 
       # --- MQTT ---
       - key: MQTT_BROKER_URL
-        sync: false 
+        sync: false
+      - key: MQTT_USER
+        sync: false
+      - key: MQTT_PASS
+        sync: false
       - key: MQTT_TOPIC
         value: monsai/telemetria
       - key: MQTT_CLIENT_ID
