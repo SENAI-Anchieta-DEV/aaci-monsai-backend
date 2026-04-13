@@ -5,7 +5,7 @@ ENV LANG=C.UTF-8
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Dfile.encoding=UTF-8
 
 # Etapa 2: Execução da aplicação
 FROM eclipse-temurin:21-jre
