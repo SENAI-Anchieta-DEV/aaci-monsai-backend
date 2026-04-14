@@ -55,7 +55,7 @@ public class SecurityConfig {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
 
         // Permite explicitamente o seu frontend
-        configuration.setAllowedOrigins(java.util.List.of("http://localhost:3000","https://aaci-monsai-backend-mrxp.onrender.com"));
+        configuration.setAllowedOrigins(java.util.List.of("http://localhost:3000","https://aaci-monsai-backend-mrxp.onrender.com", "https://aaci-monsai-frontend.firebaseapp.com"));
 
         // Define os métodos permitidos
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
