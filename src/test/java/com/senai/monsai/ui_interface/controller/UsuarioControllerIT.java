@@ -36,7 +36,7 @@ class UsuarioControllerIT {
     @Autowired private JwtService jwtService;
 
     private Asilo asiloSalvo;
-    private String tokenGestor; // Guarda o token do Gestor para os testes
+    private String tokenGestor;
 
     @BeforeEach
     void setup() {
