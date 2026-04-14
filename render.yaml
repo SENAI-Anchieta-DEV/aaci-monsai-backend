@@ -6,8 +6,11 @@ services:
     region: oregon
     autoDeployTrigger: commit
     envVars:
+      - key: PORT
+        value: 8080
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+
 
       # --- Variáveis de Sistema do Banco (Necessárias para a URL abaixo) ---
       - key: DATABASE_HOST
