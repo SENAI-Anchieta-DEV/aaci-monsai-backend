@@ -29,7 +29,7 @@ public class MensagemMqttService {
             telemetriaService.processarTelemetria(dto);
 
             // 2. Atualiza a "Ultima Telemetria" para o React
-            TelemetriaController.atualizarDados(dto);
+          //  TelemetriaController.atualizarDados(dto);
 
         } catch (JsonProcessingException e) {
             // Erro 1: A pulseira mandou um JSON mal formatado

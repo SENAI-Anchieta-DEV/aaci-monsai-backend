@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/telemetria")
@@ -40,7 +42,7 @@ public class TelemetriaController {
                             value = """
                             {
                               "idoso_id": 1,
-                              "pulseira_id": "b99d5543-7f2a-4632-8401-2292f392237d",
+                              "pulseira_id": "MON-313",
                               "data_hora": "2026-03-10T11:00:00",
                               "sinal_vital": {
                                 "sinal_vital_id": "SV-001",
@@ -67,9 +69,6 @@ public class TelemetriaController {
         // Se a pulseira for do idoso errado, o Service lançará uma SecurityException
         // O seu GlobalExceptionHandler deve capturar isso e devolver um erro 403 (Forbidden) ou 400 (Bad Request)
         telemetriaService.processarTelemetria(dto);
-        atualizarDados(dto);
-        // Atualiza a variável em memória para o React (apenas para testes locais)
-        atualizarDados(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Dados de telemetria processados e analisados com sucesso!");
     }
@@ -94,19 +93,15 @@ public class TelemetriaController {
     // ==========================================
     // 3. RETORNAR ÚLTIMA LEITURA (Para o Frontend/React)
     // ==========================================
-    private static TelemetriaDTO ultimaTelemetria = null;
+    private final Map<String, TelemetriaDTO> ultimasTelemetrias = new ConcurrentHashMap<>();
 
-    @GetMapping("/ultima")
-    @Operation(summary = "Obter última telemetria", description = "Endpoint de polling temporário para o React atualizar a tela")
-    public ResponseEntity<TelemetriaDTO> getUltimaTelemetria() {
-        if (ultimaTelemetria == null) {
-            return ResponseEntity.noContent().build(); // 204 se não tiver dados ainda
-        }
-        return ResponseEntity.ok(ultimaTelemetria);
+    protected void atualizarDados(TelemetriaDTO dto) {
+        ultimasTelemetrias.put(dto.pulseiraId(), dto);
     }
 
-    public static void atualizarDados(TelemetriaDTO novoDto) {
-        ultimaTelemetria = novoDto;
+    @GetMapping("/ultima")
+    public ResponseEntity<?> getUltimaTelemetria() {
+        return ResponseEntity.ok(ultimasTelemetrias); // retorna o mapa inteiro
     }
 
 
