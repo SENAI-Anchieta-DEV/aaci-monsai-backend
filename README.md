@@ -1,4 +1,4 @@
-# 🌿 Monsai — Monitoramento Integrado de Sáude do Idoso (Backend API)
+# 🌿 Monsai — Backend API
 
 <p align="center">
   Plataforma backend para monitoramento inteligente com integração IoT, processamento em tempo real e API segura.
