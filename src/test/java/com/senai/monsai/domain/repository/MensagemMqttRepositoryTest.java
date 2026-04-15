@@ -64,7 +64,7 @@ class MensagemMqttRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve buscar uma mensagem pelo ID String (UUID)")
+    @DisplayName("Deve buscar uma mensagem pelo ID")
     void deveBuscarPorId() {
         // Arrange
         MensagemMqtt mensagem = new MensagemMqtt();
@@ -72,14 +72,16 @@ class MensagemMqttRepositoryTest {
         mensagem.setDataHoraEvento(LocalDateTime.now());
         mensagem.setDataRecebimento(LocalDateTime.now());
 
-        // Act
         MensagemMqtt salva = mensagemMqttRepository.save(mensagem);
-        String idGerado = String.valueOf(salva.getId());
 
+        Long idGerado = salva.getId();
+
+        // O findById espera um Long se o seu repositório for JpaRepository<MensagemMqtt, Long>
         Optional<MensagemMqtt> encontrada = mensagemMqttRepository.findById(idGerado);
 
         // Assert
         assertThat(encontrada).isPresent();
+        // Comparando Long com Long (1L == 1L)
         assertThat(encontrada.get().getId()).isEqualTo(idGerado);
     }
 }
