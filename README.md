@@ -1,4 +1,4 @@
-# 🌿 Monsai — Smart Monitoring Platform (Backend API)
+# 🌿 Monsai — Monitoramento Integrado de Sáude do Idoso (Backend API)
 
 <p align="center">
   Plataforma backend para monitoramento inteligente com integração IoT, processamento em tempo real e API segura.
@@ -213,8 +213,8 @@ Este backend faz parte de um ecossistema:
 
 * 📱 Mobile App
 * 💻 Frontend Web
+* 🤖 IOT
 * ☁️ Backend API (este projeto)
-
 ---
 
 ## 📌 Status
@@ -225,7 +225,11 @@ Este backend faz parte de um ecossistema:
 
 ## 👩‍💻 Autoria
 
-Projeto desenvolvido no contexto acadêmico — SENAI.
+Direitos totalmente reservados a: 
+Allan Leal da Luz
+André Mendes Godek
+Christian Soares Maia
+Izabella Carolina Hermano Alves
 
 ---
 
