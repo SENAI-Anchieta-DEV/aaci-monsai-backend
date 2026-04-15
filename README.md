@@ -1,13 +1,13 @@
-# 🌿 Monsai — API Backend
+# 🌿 Monsai — Smart Monitoring Platform (Backend API)
 
 <p align="center">
-  Backend robusto para monitoramento inteligente com IoT, autenticação segura e processamento em tempo real.
+  Plataforma backend para monitoramento inteligente com integração IoT, processamento em tempo real e API segura.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Spring%20Boot-4.0.2-02502c?style=for-the-badge&logo=springboot"/>
   <img src="https://img.shields.io/badge/Java-21-227e35?style=for-the-badge&logo=openjdk"/>
-  <img src="https://img.shields.io/badge/MySQL-8.x-096732?style=for-the-badge&logo=mysql"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-16-096732?style=for-the-badge&logo=postgresql"/>
   <img src="https://img.shields.io/badge/MQTT-RealTime-649c7e?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/Auth-JWT-5cb52d?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/API-OpenAPI%20%2F%20Swagger-b0d693?style=for-the-badge"/>
@@ -17,133 +17,155 @@
 
 ## 📌 Sobre o Projeto
 
-O **Monsai Backend** é uma API desenvolvida com foco em **monitoramento inteligente e integração com dispositivos IoT**, permitindo o recebimento de dados em tempo real via MQTT, persistência em banco relacional e exposição de endpoints seguros via JWT.
+O **Monsai Backend** é uma API desenvolvida para suportar sistemas de **monitoramento inteligente com dispositivos IoT**, permitindo ingestão de dados em tempo real via MQTT, processamento backend e persistência em banco relacional.
 
-💡 Ideal para sistemas como:
+💡 Casos de uso:
 
-* Monitoramento ambiental
-* Sensores inteligentes
-* Sistemas acadêmicos com controle em tempo real
-* Plataformas de telemetria
+* Monitoramento ambiental 🌱
+* Sensores inteligentes 📡
+* Telemetria em tempo real ⚡
+* Sistemas acadêmicos com eventos em tempo real 🎓
+
+---
+
+## 🧠 Arquitetura do Sistema
+
+```text
+[ Dispositivos IoT ]
+        │
+        ▼
+   ( MQTT Broker )
+        │
+        ▼
+[ Monsai Backend API ]
+        │
+ ┌──────┼──────────┐
+ ▼      ▼          ▼
+Auth   Services   MQTT Listener
+ │        │            │
+ ▼        ▼            ▼
+        PostgreSQL Database
+```
+
+### 📂 Camadas
+
+* **Application**
+
+  * DTOs
+  * Services (regras de negócio)
+
+* **Infrastructure**
+
+  * Configurações (MQTT, Security, Swagger)
+  * Integrações externas
+
+* **Domain (implícito)**
+
+  * Entidades e lógica central
 
 ---
 
 ## ⚙️ Pré-requisitos
 
-Antes de rodar o projeto:
-
-* ☕ **Java 21 (JDK)**
-* 📦 **Maven 3.9+**
-* 🐬 **MySQL 8.x**
-* 📡 **Broker MQTT (ex: Mosquitto)**
+* ☕ Java 21
+* 📦 Maven 3.9+
+* 🐘 PostgreSQL 16+
+* 📡 Broker MQTT (Mosquitto recomendado)
 
 ---
 
-## 📁 Clone e Estrutura
+## 📁 Setup do Projeto
 
-### 🔽 Clone o repositório
+### 🔽 Clone
 
 ```bash
 git clone https://github.com/seu-org/aaci-monsai-backend.git
 cd aaci-monsai-backend
 ```
 
-### 🗂 Estrutura do projeto
-
-```bash
-src/
-├── main/
-│   ├── java/com/senai/monsai/
-│   │   ├── application/
-│   │   │   ├── dto/
-│   │   │   └── service/
-│   │   └── infrastructure/
-│   │       └── config/
-│   └── resources/
-│       └── application.properties
-pom.xml
-```
-
 ---
 
 ## 🔐 Configuração do Ambiente
 
-⚠️ O arquivo `.env` não é versionado.
-
-### 📄 Crie um `.env` na raiz:
+⚠️ Crie um arquivo `.env` na raiz:
 
 ```env
 # JWT
 JWT_SECRET=monsaiSistemaSeguroJwtChaveMuitoForte123456
 JWT_EXPIRATION=86400000
 
-# MySQL
-DB_URL=jdbc:mysql://localhost:3306/monsai_db?createDatabaseIfNotExist=true&serverTimezone=UTC
-DB_USERNAME=root
-DB_PASSWORD=sua_senha_mysql
+# PostgreSQL
+DB_URL=jdbc:postgresql://localhost:5432/monsai_db
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha
 
 # MQTT
 MQTT_BROKER_URL=tcp://localhost:1883
 MQTT_CLIENT_ID=monsai-backend-api
-MQTT_USERNAME=
-MQTT_PASSWORD=
 MQTT_TOPIC=monsai/telemetria
-MQTT_KEEP_ALIVE=60
 MQTT_QOS=1
 ```
 
 ---
 
-## 🗄️ Banco de Dados
+## 🗄️ Banco de Dados (PostgreSQL)
 
-✔ Criado automaticamente
-✔ Gerenciado pelo Hibernate (`ddl-auto=update`)
-
-### (Opcional) Criar manualmente:
+### ✔ Criar banco manualmente:
 
 ```sql
-CREATE DATABASE monsai_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE monsai_db;
 ```
+
+### ✔ Configuração padrão:
+
+* Porta: `5432`
+* Usuário: `postgres`
+
+### ✔ ORM:
+
+* Hibernate (`ddl-auto=update`)
 
 ---
 
-## 🚀 Como Executar
+## 🚀 Execução
 
-### ▶️ Rodar com Maven
+### ▶️ Desenvolvimento
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-### ▶️ Build + execução
+### ▶️ Produção (JAR)
 
 ```bash
 ./mvnw clean package -DskipTests
 java -jar target/monsai-0.0.1-SNAPSHOT.jar
 ```
 
-### ✅ Verificar API
+---
+
+## ✅ Health Check
 
 ```bash
 curl http://localhost:8080/actuator/health
 ```
 
+Resposta esperada:
+
+```json
+{"status":"UP"}
+```
+
 ---
 
-## 📖 Documentação da API
-
-### 🔗 Acesse:
+## 📖 API Docs
 
 * Swagger UI: http://localhost:8080/swagger-ui/index.html
 * OpenAPI: http://localhost:8080/v3/api-docs
 
-### 🔐 Autenticação
+### 🔐 Autenticação JWT
 
-A API utiliza **JWT**.
-
-No Swagger:
-
-```
+```text
 Bearer seu_token
 ```
 
@@ -151,62 +173,62 @@ Bearer seu_token
 
 ## 📡 Integração MQTT
 
-O sistema consome dados em tempo real via MQTT:
+| Configuração | Valor                |
+| ------------ | -------------------- |
+| Broker       | tcp://localhost:1883 |
+| Topic        | monsai/telemetria    |
+| QoS          | 1                    |
 
-* Broker: `tcp://localhost:1883`
-* Topic: `monsai/telemetria`
-* QoS: `1`
-
-📥 Ideal para ingestão contínua de dados de sensores IoT.
-
----
-
-## 📦 Principais Tecnologias
-
-| Tecnologia      | Função              |
-| --------------- | ------------------- |
-| Spring Boot     | Framework principal |
-| Spring Security | Autenticação        |
-| JJWT            | Tokens JWT          |
-| Spring Data JPA | Persistência        |
-| MySQL           | Banco relacional    |
-| MQTT (Paho)     | Comunicação IoT     |
-| Swagger/OpenAPI | Documentação        |
+📥 Recebe dados em tempo real dos dispositivos IoT.
 
 ---
 
-## 🧠 Arquitetura
+## 📦 Stack Tecnológica
 
-O projeto segue uma estrutura organizada em camadas:
-
-* **Application** → regras de negócio
-* **DTOs** → comunicação entre camadas
-* **Infrastructure** → configs e integrações externas
-
----
-
-## 💡 Diferenciais
-
-✨ Integração com IoT via MQTT
-🔐 Segurança com JWT
-📊 Estrutura escalável
-⚡ Processamento em tempo real
-📄 Documentação automática com Swagger
+| Tecnologia      | Papel             |
+| --------------- | ----------------- |
+| Spring Boot     | Core da aplicação |
+| Spring Security | Autenticação      |
+| JJWT            | Tokens JWT        |
+| Spring Data JPA | Persistência      |
+| PostgreSQL      | Banco de dados    |
+| MQTT (Paho)     | Comunicação IoT   |
+| Swagger         | Documentação      |
 
 ---
 
-## 📌 Status do Projeto
+## 💡 Diferenciais Técnicos
 
-🚧 Em desenvolvimento / evolução contínua
+* 🔐 Autenticação stateless com JWT
+* 📡 Integração com IoT via MQTT
+* ⚡ Processamento em tempo real
+* 🧱 Arquitetura modular e escalável
+* 📄 Documentação automática
+
+---
+
+## 🔗 Integração com Outros Módulos
+
+Este backend faz parte de um ecossistema:
+
+* 📱 Mobile App
+* 💻 Frontend Web
+* ☁️ Backend API (este projeto)
+
+---
+
+## 📌 Status
+
+🚧 Em desenvolvimento contínuo
 
 ---
 
 ## 👩‍💻 Autoria
 
-Projeto desenvolvido no contexto acadêmico pelo SENAI.
+Projeto desenvolvido no contexto acadêmico — SENAI.
 
 ---
 
-## 📎 Licença
+## 📄 Licença
 
-Este projeto é para fins educacionais.
+Uso educacional.
