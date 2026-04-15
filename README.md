@@ -225,11 +225,16 @@ Este backend faz parte de um ecossistema:
 
 ## 👩‍💻 Autoria
 
-Direitos totalmente reservados a: 
-Allan Leal da Luz
-André Mendes Godek
-Christian Soares Maia
-Izabella Carolina Hermano Alves
+<p align="center">
+  <strong>Direitos totalmente reservados a:</strong>
+</p>
+
+<p align="center">
+  Allan Leal da Luz<br>
+  André Mendes Godek<br>
+  Christian Soares Maia<br>
+  Izabella Carolina Hermano Alves
+</p>
 
 ---
 
