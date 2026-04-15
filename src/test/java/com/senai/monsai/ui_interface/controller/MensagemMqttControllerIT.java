@@ -33,45 +33,50 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MensagemMqttControllerIT {
 
     @Autowired private MockMvc mockMvc;
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private DispositivoRepository dispositivoRepository;
+    @Autowired private IdosoRepository idosoRepository;
     @Autowired private JwtService jwtService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
 
     private String tokenGestor;
     private String dispositivoIdExistente;
-
-    @Autowired private IdosoRepository idosoRepository; // Adicione este repositório
+    private Long idosoIdExistente;
 
     @BeforeEach
     void setup() {
-        // 1. Limpeza (Atenção à ordem por causa das FKs)
+        // 1. Limpeza rigorosa para evitar conflitos entre testes
         idosoRepository.deleteAll();
         dispositivoRepository.deleteAll();
         usuarioRepository.deleteAll();
 
-        // 2. Criar e salvar o dispositivo
+        // 2. Instanciar o dispositivo (Sem salvar ainda, o Idoso fará isso via Cascade)
         Dispositivo dispositivo = Dispositivo.builder()
                 .serial("SN-TEST-123")
                 .statusDispositivo(StatusDispositivo.ATIVO)
                 .nivelBateria(100)
                 .ultimoContato(LocalDateTime.now())
                 .build();
-        dispositivo = dispositivoRepository.save(dispositivo);
-        this.dispositivoIdExistente = dispositivo.getId();
 
-        // 3. Criar e salvar o Idoso VINCULADO ao dispositivo
-        // Ajuste os campos conforme sua entidade Idoso
+        // 3. Instanciar o Idoso e vincular ao dispositivo
         Idoso idoso = Idoso.builder()
                 .nome("João da Silva")
                 .cpf("123.456.789-00")
+                .email("joao@email.com")
                 .ativo(true)
-                .dispositivo(dispositivo) // <--- O VÍNCULO QUE FALTAVA
+                .dispositivo(dispositivo)
                 .build();
-        idosoRepository.save(idoso);
 
-        // 4. Setup do usuário para o token (como estava antes)
+        // 4. Salvar o Idoso (Isso salva o dispositivo automaticamente por causa do CascadeType.ALL)
+        idoso = idosoRepository.save(idoso);
+
+        // 5. Capturar os IDs reais gerados pelo banco de dados
+        this.idosoIdExistente = idoso.getId();
+        this.dispositivoIdExistente = idoso.getDispositivo().getId();
+
+        // 6. Criar usuário para autenticação
         Usuario gestor = Usuario.builder()
                 .nome("Admin")
                 .email("admin@teste.com")
@@ -79,12 +84,14 @@ class MensagemMqttControllerIT {
                 .ativo(true)
                 .build();
         usuarioRepository.save(gestor);
+
         tokenGestor = jwtService.generateToken(gestor.getEmail(), "ROLE_GESTOR");
     }
+
     @Test
     @DisplayName("Deve processar contrato de telemetria complexo com sucesso")
     void deveProcessarTelemetriaComplexa() throws Exception {
-        // Montagem do DTO com o ID que realmente existe no banco
+        // Preparação do DTO de Telemetria usando os IDs dinâmicos do Setup
         var aceleracao = new TelemetriaDTO.AceleracaoDTO(1.2, 0.5, -9.8);
         var movimento = new TelemetriaDTO.MovimentoDTO(aceleracao, false);
         var sinais = new TelemetriaDTO.SinalVitalDTO("SV-001", 80, 36.5, movimento);
@@ -94,14 +101,15 @@ class MensagemMqttControllerIT {
         );
 
         TelemetriaDTO dto = new TelemetriaDTO(
-                1L,
-                this.dispositivoIdExistente, // <--- Agora o Service vai encontrar!
+                this.idosoIdExistente,      // ID do idoso correto no banco
+                this.dispositivoIdExistente, // ID da pulseira correta no banco
                 "2026-03-11T10:00:00",
                 sinais,
                 local,
                 statusDisp
         );
 
+        // Execução e Verificação
         mockMvc.perform(post("/api/mqtt/simular-sensor")
                         .header("Authorization", "Bearer " + tokenGestor)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -110,10 +118,15 @@ class MensagemMqttControllerIT {
     }
 
     @Test
-    @DisplayName("Deve retornar 400 se faltar campo obrigatório")
+    @DisplayName("Deve retornar 400 se faltar campo obrigatório ou ID inexistente")
     void deveValidarCamposObrigatoriosAninhados() throws Exception {
-        // ID aleatório para forçar erro de validação/negócio se necessário
-        TelemetriaDTO dtoInvalido = new TelemetriaDTO(1L, "ID-INEXISTENTE", "2026", null, null, null);
+        // Enviando um payload com ID inexistente para testar a falha
+        TelemetriaDTO dtoInvalido = new TelemetriaDTO(
+                999L,
+                "ID-INEXISTENTE",
+                "2026-03-11T10:00:00",
+                null, null, null
+        );
 
         mockMvc.perform(post("/api/mqtt/simular-sensor")
                         .header("Authorization", "Bearer " + tokenGestor)
