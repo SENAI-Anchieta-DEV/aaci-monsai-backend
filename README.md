@@ -79,7 +79,7 @@ Auth   Services   MQTT Listener
 ### 🔽 Clone
 
 ```bash
-git clone https://github.com/seu-org/aaci-monsai-backend.git
+git clone https://github.com/SENAI-Anchieta-DEV/aaci-monsai-backend.git
 cd aaci-monsai-backend
 ```
 
@@ -91,7 +91,7 @@ cd aaci-monsai-backend
 
 ```env
 # JWT
-JWT_SECRET=monsaiSistemaSeguroJwtChaveMuitoForte123456
+JWT_SECRET=
 JWT_EXPIRATION=86400000
 
 # PostgreSQL
@@ -219,7 +219,7 @@ Este backend faz parte de um ecossistema:
 
 ## 📌 Status
 
-🚧 Em desenvolvimento contínuo
+🚧 Em desenvolvimento
 
 ---
 
