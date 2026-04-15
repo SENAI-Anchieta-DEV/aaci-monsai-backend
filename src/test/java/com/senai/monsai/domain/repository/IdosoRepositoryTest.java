@@ -1,6 +1,7 @@
 package com.senai.monsai.domain.repository;
 
 import com.senai.monsai.domain.entity.Asilo;
+import com.senai.monsai.domain.entity.Dispositivo;
 import com.senai.monsai.domain.entity.Idoso;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -155,5 +156,66 @@ class IdosoRepositoryTest {
 
         assertThat(idosoRepository.findById(idIdoso)).isEmpty();
         assertThat(entityManager.find(Asilo.class, idAsilo)).isNotNull();
+    }
+    @Test
+    @DisplayName("8. Deve permitir vários idosos no mesmo asilo")
+    void devePermitirVariosIdososNoMesmoAsilo() {
+        Idoso i1 = Idoso.builder().nome("Idoso 1").cpf("CPF1").asilo(asiloSalvo).build();
+        Idoso i2 = Idoso.builder().nome("Idoso 2").cpf("CPF2").asilo(asiloSalvo).build();
+
+        idosoRepository.saveAndFlush(i1);
+        idosoRepository.saveAndFlush(i2);
+
+        assertThat(idosoRepository.findByAsiloId(asiloSalvo.getId())).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("9. Deve encontrar idoso por CPF")
+    void deveBuscarPorCpf() {
+        String cpf = "123.456.789-00";
+        Idoso idoso = Idoso.builder().nome("Teste").cpf(cpf).asilo(asiloSalvo).build();
+        entityManager.persist(idoso);
+        boolean existe = idosoRepository.existsByCpf(cpf);
+
+        assertThat(existe).isTrue();
+    }
+
+    @Test
+    @DisplayName("10. Deve persistir idoso com dispositivo (OneToOne)")
+    void deveSalvarIdosoComDispositivo() {
+        Dispositivo disp = Dispositivo.builder().serial("XYZ-999").build();
+        // Não precisamos salvar o dispositivo antes se o cascade for ALL
+
+        Idoso idoso = Idoso.builder()
+                .nome("Idoso Tech")
+                .cpf("CPF_TECH")
+                .asilo(asiloSalvo)
+                .dispositivo(disp)
+                .build();
+
+        Idoso salvo = idosoRepository.save(idoso);
+
+        assertThat(salvo.getDispositivo()).isNotNull();
+        assertThat(salvo.getDispositivo().getSerial()).isEqualTo("XYZ-999");
+    }
+
+    @Test
+    @DisplayName("11. Deve atualizar status ativo do idoso")
+    void deveAtualizarStatusAtivo() {
+        Idoso idoso = Idoso.builder().nome("Ativo").cpf("CPF_A").asilo(asiloSalvo).ativo(true).build();
+        idoso = idosoRepository.save(idoso);
+
+        idoso.setAtivo(false);
+        Idoso atualizado = idosoRepository.saveAndFlush(idoso);
+
+        assertThat(atualizado.isAtivo()).isFalse();
+    }
+
+    @Test
+    @DisplayName("12. Deve falhar ao buscar idoso por ID de asilo inexistente")
+    void deveRetornarVazioParaAsiloInexistente() {
+        // ID 999L provavelmente não existe
+        List<Idoso> resultado = idosoRepository.findByAsiloId(999L);
+        assertThat(resultado).isEmpty();
     }
 }

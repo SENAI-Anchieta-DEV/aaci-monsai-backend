@@ -16,12 +16,15 @@ public class Asilo {
     private Long id;
 
     private String nome;
+
+    @Column(unique = true, nullable = false)
     private String cnpj;
+
     private String endereco;
 
     @JsonIgnore
     @OneToMany(mappedBy = "asilo")
     private List<Idoso> idosos;
 
-    private boolean ativo;
+    private boolean ativo = true;
 }

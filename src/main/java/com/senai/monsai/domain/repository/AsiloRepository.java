@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface AsiloRepository extends JpaRepository<Asilo, Long> {
 
     boolean existsByCnpj(@NotBlank(message = "O CNPJ é obrigatório.") String cnpj);
+
 }
