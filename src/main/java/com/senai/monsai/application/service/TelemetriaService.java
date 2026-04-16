@@ -9,6 +9,7 @@ import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
 import com.senai.monsai.domain.repository.DispositivoRepository;
 import com.senai.monsai.domain.repository.FaixaReferenciaRepository;
 import com.senai.monsai.domain.repository.MensagemMqttRepository;
+import com.senai.monsai.ui_interface.controller.TelemetriaController;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -67,6 +68,7 @@ public class TelemetriaService {
         historico.setDataRecebimento(LocalDateTime.now());
 
         mensagemRepository.save(historico);
+        
 
         // 5. NOVA ETAPA: Analisar dados clínicos e disparar alertas
         analisarSinaisEGerarAlertas(dto, dispositivo);
@@ -92,16 +94,16 @@ public class TelemetriaService {
 
         // Se houver faixa cadastrada, usamos os limites dela. Se não, usamos o padrão (Fallback)
         int bpm = dto.sinalVital().frequenciaCardiacaBpm();
-        int minBpm = (faixa != null) ? faixa.getMinBpm() : 60;
-        int maxBpm = (faixa != null) ? faixa.getMaxBpm() : 100;
+        int minBpm = (faixa != null && faixa.getMinBpm() != null) ? faixa.getMinBpm() : 60;
+        int maxBpm = (faixa != null && faixa.getMaxBpm() != null) ? faixa.getMaxBpm() : 100;
 
         if (bpm < minBpm || bpm > maxBpm) {
             motivosAlerta.add("⚠️ ANOMALIA CARDÍACA: BPM " + bpm + " (Fora da faixa: " + minBpm + "-" + maxBpm + ")");
         }
 
         double temp = dto.sinalVital().temperaturaC();
-        double minT = (faixa != null) ? faixa.getMinTemp() : 35.5;
-        double maxT = (faixa != null) ? faixa.getMaxTemp() : 37.5;
+        double minT = (faixa != null && faixa.getMinTemp() != null) ? faixa.getMinTemp() : 35.5;
+        double maxT = (faixa != null && faixa.getMaxTemp() != null) ? faixa.getMaxTemp() : 37.5;
 
         if (temp < minT || temp > maxT) {
             motivosAlerta.add("⚠️ TEMPERATURA ANORMAL: " + temp + " °C (Limite: " + minT + "-" + maxT + ")");

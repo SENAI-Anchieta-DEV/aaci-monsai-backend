@@ -85,6 +85,11 @@ public class IdosoService {
             return idosoRepository.findByAsiloId(usuarioLogado.getAsilo().getId());
         }
 
+    public Idoso buscarPorSerial(String serial) {
+        return idosoRepository.findByDispositivoSerial(serial)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Idoso com a pulseira " + serial + " não encontrado."));
+    }
+
         public Idoso atualizarIdoso(Long idIdoso, IdosoUpdateDTO dto) {
             String emailUsuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
             Usuario usuarioLogado = usuarioRepository.findByEmail(emailUsuarioLogado)

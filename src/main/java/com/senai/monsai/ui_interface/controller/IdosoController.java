@@ -57,7 +57,21 @@ public class IdosoController {
     }
 
     // ==========================================
-    // 3. ATUALIZAR IDOSO
+    // 3. BUSCAR IDOSO POR SERIAL DA PULSEIRA
+    // ==========================================
+    @GetMapping("/buscarPorSerial")
+    @Operation(summary = "Busca idoso pelo serial da pulseira")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GESTOR', 'CUIDADOR')")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Idoso encontrado com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
+    })
+    public ResponseEntity<Idoso> buscarPorSerial(@RequestParam String serial) {
+        return ResponseEntity.ok(idosoService.buscarPorSerial(serial));
+    }
+
+    // ==========================================
+    // 4. ATUALIZAR IDOSO
     // ==========================================
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar dados pessoais de um Idoso", security = @SecurityRequirement(name = "bearerAuth"))
@@ -73,7 +87,7 @@ public class IdosoController {
     }
 
     // ==========================================
-    // 4. INATIVAR IDOSO
+    // 5. INATIVAR IDOSO
     // ==========================================
     @DeleteMapping("/{id}")
     @Operation(summary = "Inativar um Idoso (Óbito, Transferência ou Fim de Contrato)", security = @SecurityRequirement(name = "bearerAuth"))

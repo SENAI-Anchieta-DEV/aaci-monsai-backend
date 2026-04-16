@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 public class FaixaReferenciaService {
@@ -32,29 +33,29 @@ public class FaixaReferenciaService {
         // --- AUDITORIA DE BATIMENTOS (BPM) ---
 
         // Mínimo BPM
-        if (!antiga.getMinBpm().equals(novaFaixa.getMinBpm())) {
+        if (!Objects.equals(antiga.getMinBpm(), novaFaixa.getMinBpm())) {
             salvarLog(idosoId, nomeGestor, "BPM Mínimo",
-                    antiga.getMinBpm().toString(), novaFaixa.getMinBpm().toString());
+                    String.valueOf(antiga.getMinBpm()), String.valueOf(novaFaixa.getMinBpm()));
         }
 
         // Máximo BPM
-        if (!antiga.getMaxBpm().equals(novaFaixa.getMaxBpm())) {
+        if (!Objects.equals(antiga.getMaxBpm(), novaFaixa.getMaxBpm())) {
             salvarLog(idosoId, nomeGestor, "BPM Máximo",
-                    antiga.getMaxBpm().toString(), novaFaixa.getMaxBpm().toString());
+                    String.valueOf(antiga.getMaxBpm()), String.valueOf(novaFaixa.getMaxBpm()));
         }
 
         // --- AUDITORIA DE TEMPERATURA ---
 
         // Mínima Temperatura
-        if (!antiga.getMinTemp().equals(novaFaixa.getMinTemp())) {
+        if (!Objects.equals(antiga.getMinTemp(), novaFaixa.getMinTemp())) {
             salvarLog(idosoId, nomeGestor, "Temperatura Mínima",
-                    antiga.getMinTemp().toString(), novaFaixa.getMinTemp().toString());
+                    String.valueOf(antiga.getMinTemp()), String.valueOf(novaFaixa.getMinTemp()));
         }
 
         // Máxima Temperatura
-        if (!antiga.getMaxTemp().equals(novaFaixa.getMaxTemp())) {
+        if (!Objects.equals(antiga.getMaxTemp(), novaFaixa.getMaxTemp())) {
             salvarLog(idosoId, nomeGestor, "Temperatura Máxima",
-                    antiga.getMaxTemp().toString(), novaFaixa.getMaxTemp().toString());
+                    String.valueOf(antiga.getMaxTemp()), String.valueOf(novaFaixa.getMaxTemp()));
         }
 
         // 2. Após registrar todas as mudanças no log, salvamos a nova versão no banco
