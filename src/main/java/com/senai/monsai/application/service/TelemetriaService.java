@@ -2,10 +2,12 @@ package com.senai.monsai.application.service;
 
 import com.senai.monsai.application.dto.TelemetriaDTO;
 import com.senai.monsai.domain.entity.Dispositivo;
+import com.senai.monsai.domain.entity.FaixaReferencia;
 import com.senai.monsai.domain.entity.MensagemMqtt;
 import com.senai.monsai.domain.entity.Usuario;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
 import com.senai.monsai.domain.repository.DispositivoRepository;
+import com.senai.monsai.domain.repository.FaixaReferenciaRepository;
 import com.senai.monsai.domain.repository.MensagemMqttRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,10 @@ public class TelemetriaService {
 
     @Autowired
     private MensagemMqttRepository mensagemRepository;
+
+    @Autowired
+    private FaixaReferenciaRepository faixaRepository; // Injetando as regras
+
 
     // Se você criar um repositório para salvar os alertas no banco, injete-o aqui:
     // @Autowired
@@ -49,7 +55,7 @@ public class TelemetriaService {
         dispositivo.setUltimoContato(LocalDateTime.now());
         dispositivoRepository.save(dispositivo);
 
-        // 4. Criar o Log Histórico (A Mensagem)
+        // 4. Criar o Log Histórico (AACI-262 - Persistência Contínua)
         MensagemMqtt historico = new MensagemMqtt();
         historico.setDispositivo(dispositivo);
         historico.setFrequenciaCardiaca(dto.sinalVital().frequenciaCardiacaBpm());
@@ -73,31 +79,39 @@ public class TelemetriaService {
      */
     private void analisarSinaisEGerarAlertas(TelemetriaDTO dto, Dispositivo dispositivo) {
         List<String> motivosAlerta = new ArrayList<>();
+        Long idosoId = dispositivo.getIdoso().getId();
 
-        // Regra 1: Queda (Prioridade Máxima)
+        // Buscamos a faixa personalizada do Idoso no banco
+        FaixaReferencia faixa = faixaRepository.findByIdosoId(idosoId)
+                .orElse(null);
+
+        // Regra 1: Queda (Igual ao seu)
         if (dto.sinalVital().movimento().quedaDetectada()) {
             motivosAlerta.add("🚨 CRÍTICO: Queda detectada!");
         }
 
-        // Regra 2: Batimentos Cardíacos (Bradicardia < 50 ou Taquicardia > 120)
+        // Se houver faixa cadastrada, usamos os limites dela. Se não, usamos o padrão (Fallback)
         int bpm = dto.sinalVital().frequenciaCardiacaBpm();
-        if (bpm < 50 || bpm > 120) {
-            motivosAlerta.add("⚠️ ANOMALIA CARDÍACA: BPM registrado em " + bpm);
+        int minBpm = (faixa != null) ? faixa.getMinBpm() : 60;
+        int maxBpm = (faixa != null) ? faixa.getMaxBpm() : 100;
+
+        if (bpm < minBpm || bpm > maxBpm) {
+            motivosAlerta.add("⚠️ ANOMALIA CARDÍACA: BPM " + bpm + " (Fora da faixa: " + minBpm + "-" + maxBpm + ")");
         }
 
-        // Regra 3: Temperatura (Hipotermia < 35.0 ou Febre > 37.8)
         double temp = dto.sinalVital().temperaturaC();
-        if (temp < 35.0 || temp > 37.8) {
-            motivosAlerta.add("⚠️ TEMPERATURA ANORMAL: " + temp + " °C");
+        double minT = (faixa != null) ? faixa.getMinTemp() : 35.5;
+        double maxT = (faixa != null) ? faixa.getMaxTemp() : 37.5;
+
+        if (temp < minT || temp > maxT) {
+            motivosAlerta.add("⚠️ TEMPERATURA ANORMAL: " + temp + " °C (Limite: " + minT + "-" + maxT + ")");
         }
 
-        // Regra 4: Alerta de Sistema (Bateria)
-        int bateria = dto.statusDoDispositivo().nivelBateria();
-        if (bateria <= 15) {
-            motivosAlerta.add("🔋 BATERIA FRACA: Dispositivo com apenas " + bateria + "%");
+        // Bateria (Regra de sistema, continua igual)
+        if (dto.statusDoDispositivo().nivelBateria() <= 15) {
+            motivosAlerta.add("🔋 BATERIA FRACA");
         }
 
-        // Se encontrou alguma anomalia, processa o alerta
         if (!motivosAlerta.isEmpty()) {
             dispararNotificacoes(dispositivo, motivosAlerta);
         }
