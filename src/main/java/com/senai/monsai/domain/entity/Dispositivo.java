@@ -19,8 +19,10 @@ public class Dispositivo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id; // O pulseira_id do JSON
+    @Column(name = "dispositivo_id")
+    private String id;
 
+    @Column(nullable = false, unique = true)
     private String serial; // Identificação física/técnica
 
     @OneToOne(mappedBy = "dispositivo")
