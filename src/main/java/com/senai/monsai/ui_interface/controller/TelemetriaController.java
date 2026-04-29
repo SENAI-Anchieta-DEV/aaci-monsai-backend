@@ -105,4 +105,17 @@ public class TelemetriaController {
         // Retorna a lista que o Service preencheu
         return ResponseEntity.ok(TelemetriaService.ALERTA_CACHE);
     }
+
+    // ==========================================
+    // 5. ENVIAR COMANDO PARA A PULSEIRA (LED/Buzzer)
+    // ==========================================
+    @PostMapping("/comando-led/{serial}")
+    @Operation(summary = "Acionar LED da pulseira", description = "Envia um comando via MQTT para testar o LED do dispositivo")
+    public ResponseEntity<Void> testarPulseira(@PathVariable String serial) {
+        // Envia para o tópico que o ESP32 deve estar ouvindo
+        // O payload pode ser apenas "L" (de LED)
+        mqttGateway.sendToMqtt("L", "monsai/comandos/" + serial);
+
+        return ResponseEntity.ok().build();
+    }
 }
