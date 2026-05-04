@@ -57,18 +57,15 @@ public class IdosoService {
 
         Dispositivo dispositivo = new Dispositivo();
         dispositivo.setSerial(dto.serialDispositivo());
-        dispositivo = pulseiraRepository.save(dispositivo);
 
         Idoso idoso = new Idoso();
         idoso.setNome(dto.nome());
         idoso.setCpf(dto.cpf());
         idoso.setEmail(dto.email());
-        idoso.setDispositivo(dispositivo);
         idoso.setAsilo(asiloDestino);
         idoso.setAtivo(true);
-
+        idoso.setDispositivo(dispositivo);
         dispositivo.setIdoso(idoso);
-
         return idosoRepository.save(idoso);
     }
         public List<Idoso> listarTodos() {
