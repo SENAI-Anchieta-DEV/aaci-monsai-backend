@@ -18,7 +18,7 @@ import java.util.List;
 public class Dispositivo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @org.hibernate.annotations.UuidGenerator
     @Column(name = "dispositivo_id")
     private String id;
 
