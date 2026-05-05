@@ -2,6 +2,7 @@ package com.senai.monsai.ui_interface.controller;
 
 import com.senai.monsai.application.dto.AtualizarSenhaDTO;
 import com.senai.monsai.application.dto.UsuarioCreateDTO;
+import com.senai.monsai.application.dto.UsuarioUpdateDTO;
 import com.senai.monsai.application.service.UsuarioService;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
@@ -63,7 +64,7 @@ public class UsuarioController {
     // ==========================================
     @PatchMapping("/{id}/senha")
     @Operation(summary = "Atualizar a senha de um usuário", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR', 'FAMILIAR', 'CUIDADOR', 'ENFERMEIRO')")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Senha atualizada com sucesso (Sem conteúdo de retorno)"),
             @ApiResponse(responseCode = "400", description = "Erro de validação nos dados enviados"),
@@ -127,7 +128,7 @@ public class UsuarioController {
     // ==========================================
     @GetMapping("/{idUsuario}/idosos")
     @Operation(summary = "Listar idosos vinculados a um usuário específico", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR', 'FUNCIONARIO', 'FAMILIAR')") 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR', 'FUNCIONARIO', 'FAMILIAR', 'CUIDADOR', 'ENFERMEIRO')")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de idosos retornada com sucesso"),
             @ApiResponse(responseCode = "403", description = "Acesso negado"),
@@ -136,5 +137,36 @@ public class UsuarioController {
     public ResponseEntity<List<Idoso>> listarIdososVinculados(@PathVariable Long idUsuario) {
         List<Idoso> idosos = usuarioService.listarIdososVinculados(idUsuario);
         return ResponseEntity.ok(idosos);
+    }
+    // ==========================================
+    // 8. BUSCAR USUÁRIO POR ID
+    // ==========================================
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar um usuário pelo ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR')")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<Usuario> buscarPorId(@PathVariable Long id) {
+        Usuario usuario = usuarioService.buscarPorId(id);
+        return ResponseEntity.ok(usuario);
+    }
+    // ==========================================
+    // 9. ATUALIZAR DADOS DO USUÁRIO
+    // ==========================================
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar dados cadastrais do usuário", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'GESTOR')")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Erro de validação nos dados enviados"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<Usuario> atualizarDados(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
+        Usuario usuarioAtualizado = usuarioService.atualizarDados(id, dto);
+        return ResponseEntity.ok(usuarioAtualizado);
     }
 }

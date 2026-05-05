@@ -47,7 +47,7 @@ public class IdosoController {
     // ==========================================
     @GetMapping
     @Operation(summary = "Listar Idosos (Gestor/Cuidador vê apenas do seu asilo, SuperAdmin vê todos)", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GESTOR', 'CUIDADOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GESTOR', 'CUIDADOR', 'FAMILIAR', 'ENFERMEIRO')")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")

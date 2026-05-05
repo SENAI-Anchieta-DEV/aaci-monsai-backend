@@ -65,4 +65,14 @@ public class AsiloService {
         asilo.setAtivo(false);
         asiloRepository.save(asilo);
     }
+
+    public String buscarEndereco(Long id) {
+        Asilo asilo = asiloRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Asilo não encontrado."));
+        if (!asilo.isAtivo()) {
+            throw new RegraNegocioException("Este asilo não está mais ativo no sistema.");
+        }
+
+        return asilo.getEndereco();
+    }
 }
