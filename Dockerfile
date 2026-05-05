@@ -1,0 +1,16 @@
+# Etapa 1: Build da aplicação
+FROM maven:3.9-eclipse-temurin-21 AS build
+# Define o encoding do sistema para UTF-8
+ENV LANG=C.UTF-8
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests -Dfile.encoding=UTF-8
+
+# Etapa 2: Execução da aplicação
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+# Copia o .jar gerado na etapa anterior
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT} -jar app.jar"]

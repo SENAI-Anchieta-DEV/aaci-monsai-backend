@@ -2,6 +2,7 @@ package com.senai.monsai.application.service;
 
 import com.senai.monsai.application.dto.AtualizarSenhaDTO;
 import com.senai.monsai.application.dto.UsuarioCreateDTO;
+import com.senai.monsai.application.dto.UsuarioUpdateDTO;
 import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
@@ -45,13 +46,35 @@ public class UsuarioService {
         novoUsuario.setEmail(dto.email());
         novoUsuario.setSenha(passwordEncoder.encode(dto.senha()));
         novoUsuario.setCpf(dto.cpf());
-        novoUsuario.setTipo(dto.tipoUsuario()); // Mantido o padrão do Enum que veio no merge
+        novoUsuario.setTipo(dto.tipoUsuario());
         novoUsuario.setAsilo(asilo);
-        novoUsuario.setAtivo(true); // Nasce ativo por padrão
+        novoUsuario.setAtivo(true);
 
         return usuarioRepository.save(novoUsuario);
     }
 
+    public Usuario buscarPorId(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado com o ID: " + id));
+    }
+
+    public Usuario atualizarDados(Long id, UsuarioUpdateDTO dto) {
+        Usuario usuarioExistente = buscarPorId(id);
+        if (!usuarioExistente.getEmail().equals(dto.email()) &&
+                usuarioRepository.existsByEmail(dto.email())) {
+            throw new RecursoDuplicadoException("Este e-mail já está em uso.");
+        }
+        if (!usuarioExistente.getCpf().equals(dto.cpf()) &&
+                usuarioRepository.existsByCpf(dto.cpf())) {
+            throw new RecursoDuplicadoException("Este CPF já está cadastrado.");
+        }
+        usuarioExistente.setNome(dto.nome());
+        usuarioExistente.setCpf(dto.cpf());
+        usuarioExistente.setEmail(dto.email());
+        usuarioExistente.setTipo(dto.tipo());
+
+        return usuarioRepository.save(usuarioExistente);
+    }
     public List<Usuario> listarTodos() {
         return usuarioRepository.findAll();
     }
@@ -75,12 +98,10 @@ public class UsuarioService {
         Idoso idoso = idosoRepository.findById(idIdoso)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Idoso não encontrado."));
 
-        // Bloqueio de Zumbis
         if (!usuario.isAtivo() || !idoso.isAtivo()) {
             throw new RegraNegocioException("Operação negada: O usuário ou o idoso informado está inativo.");
         }
 
-        // Violação de Fronteira do Asilo
         if (!usuario.getAsilo().getId().equals(idoso.getAsilo().getId())) {
             throw new RegraNegocioException("Violação de segurança: O usuário e o idoso não pertencem ao mesmo asilo.");
         }

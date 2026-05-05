@@ -88,4 +88,17 @@ public class AsiloController {
         asiloService.inativarAsilo(id);
         return ResponseEntity.noContent().build();
     }
+    // ==========================================
+    // 5. BUSCAR ENDEREÇO (PÚBLICO)
+    // ==========================================
+    @GetMapping("/{id}/endereco")
+    @Operation(summary = "Buscar o endereço de um asilo (Acesso Público)")
+    @PreAuthorize("permitAll()")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Endereço retornado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Asilo não encontrado")
+    })
+    public ResponseEntity<String> buscarEndereco(@PathVariable Long id) {
+        return ResponseEntity.ok(asiloService.buscarEndereco(id));
+    }
 }

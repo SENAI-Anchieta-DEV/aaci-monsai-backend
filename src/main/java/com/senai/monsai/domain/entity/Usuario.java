@@ -18,8 +18,8 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "usuario_id") // O banco continua vendo usuario_id
-    private Long id; // Mas no Java chamamos só de "id"
+    @Column(name = "usuario_id")
+    private Long id;
 
     private String nome;
 

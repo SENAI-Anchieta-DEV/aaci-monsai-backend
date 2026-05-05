@@ -48,27 +48,21 @@ public class IdosoService {
         if (asiloDestino == null) {
             throw new RegraNegocioException("É obrigatório informar o asiloId no corpo da requisição para este usuário (Super Admin).");
         }
-
-        // REGRA DE NEGÓCIO: Sem duplicidade de Idosos
         if (idosoRepository.existsByCpf(dto.cpf())) {
             throw new RecursoDuplicadoException("Já existe um idoso cadastrado com este CPF.");
         }
 
-
         Dispositivo dispositivo = new Dispositivo();
         dispositivo.setSerial(dto.serialDispositivo());
-        dispositivo = pulseiraRepository.save(dispositivo);
 
         Idoso idoso = new Idoso();
         idoso.setNome(dto.nome());
         idoso.setCpf(dto.cpf());
         idoso.setEmail(dto.email());
-        idoso.setDispositivo(dispositivo);
         idoso.setAsilo(asiloDestino);
         idoso.setAtivo(true);
-
+        idoso.setDispositivo(dispositivo);
         dispositivo.setIdoso(idoso);
-
         return idosoRepository.save(idoso);
     }
         public List<Idoso> listarTodos() {
@@ -76,12 +70,10 @@ public class IdosoService {
             Usuario usuarioLogado = usuarioRepository.findByEmail(emailUsuarioLogado)
                     .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado."));
 
-            // Se o usuário não tem asilo (SuperAdmin), lista todo mundo
             if (usuarioLogado.getAsilo() == null) {
                 return idosoRepository.findAll();
             }
 
-            // Se for Gestor/Cuidador, lista SOMENTE os idosos do próprio asilo!
             return idosoRepository.findByAsiloId(usuarioLogado.getAsilo().getId());
         }
 

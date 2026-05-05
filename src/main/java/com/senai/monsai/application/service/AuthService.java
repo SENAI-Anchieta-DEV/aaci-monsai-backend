@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException; // Import adicionado
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +28,10 @@ public class AuthService {
 
         Usuario usuario = usuarioRepository.findByEmail(dto.email())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado."));
+        if (!usuario.isAtivo()) {
+            throw new BadCredentialsException("Usuário inativo.");
+        }
+
         String token = jwtService.generateToken(usuario.getEmail(), usuario.getTipo().name());
         return new LoginResponseDTO(token, usuario.getTipo().name());
     }
