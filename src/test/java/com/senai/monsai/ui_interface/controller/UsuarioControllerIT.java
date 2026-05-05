@@ -163,4 +163,109 @@ class UsuarioControllerIT {
                         .content("{}"))
                 .andExpect(status().isForbidden()); // Espera um 403 Proibido com sucesso!
     }
+    // Repositório necessário para criar idosos nos testes de vínculo
+    @Autowired private com.senai.monsai.domain.repository.IdosoRepository idosoRepository;
+
+    @Test
+    @DisplayName("6. Deve vincular um idoso a um usuário com sucesso")
+    void deveVincularIdoso() throws Exception {
+        // Criar um usuário (ex: Cuidador)
+        Usuario cuidador = new Usuario();
+        cuidador.setNome("Cuidador Teste");
+        cuidador.setEmail("cuidador@teste.com");
+        cuidador.setCpf("00011122233");
+        cuidador.setSenha("123");
+        cuidador.setTipo(TipoUsuario.CUIDADOR);
+        cuidador.setAsilo(asiloSalvo);
+        cuidador.setAtivo(true);
+        usuarioRepository.save(cuidador);
+
+        // Criar um Idoso (Usando entidade real ou mock dependendo da sua estrutura)
+        com.senai.monsai.domain.entity.Idoso idoso = new com.senai.monsai.domain.entity.Idoso();
+        idoso.setNome("Vovô Teste");
+        idoso.setCpf("123.456.789-00");
+        idoso.setEmail("vovo@teste.com");
+        idoso.setAsilo(asiloSalvo);
+        idoso = idosoRepository.save(idoso);
+
+        mockMvc.perform(post("/usuarios/" + cuidador.getId() + "/idosos/" + idoso.getId())
+                        .header("Authorization", "Bearer " + tokenGestor))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("7. Deve retornar 404 ao tentar inativar usuário inexistente")
+    void deveRetornar404AoInativarUsuarioInexistente() throws Exception {
+        mockMvc.perform(delete("/usuarios/9999")
+                        .header("Authorization", "Bearer " + tokenGestor))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("8. Deve retornar 400 ao tentar criar usuário com dados inválidos (Bean Validation)")
+    void deveRetornar400ParaDadosInvalidos() throws Exception {
+        // JSON com e-mail inválido e sem CPF
+        String jsonInvalido = """
+                {
+                  "nome": "Erro",
+                  "email": "email-invalido",
+                  "senha": "123",
+                  "tipoUsuario": "GESTOR",
+                  "asiloId": %d
+                }
+                """.formatted(asiloSalvo.getId());
+
+        mockMvc.perform(post("/usuarios")
+                        .header("Authorization", "Bearer " + tokenGestor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonInvalido))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("9. Deve listar idosos vinculados a um usuário")
+    void deveListarIdososVinculados() throws Exception {
+        // Criar o usuário
+        Usuario familiar = new Usuario();
+        familiar.setNome("Familiar Teste");
+        familiar.setEmail("familiar@teste.com");
+        familiar.setCpf("77766655544");
+        familiar.setSenha("123");
+        familiar.setTipo(TipoUsuario.FAMILIAR);
+        familiar.setAsilo(asiloSalvo);
+        familiar.setAtivo(true);
+        usuarioRepository.save(familiar);
+
+        // O teste assume que o service/vínculo funciona.
+        // Aqui testamos o endpoint e o acesso (Role Familiar pode ver seus idosos)
+        String tokenFamiliar = jwtService.generateToken(familiar.getEmail(), "ROLE_FAMILIAR");
+
+        mockMvc.perform(get("/usuarios/" + familiar.getId() + "/idosos")
+                        .header("Authorization", "Bearer " + tokenFamiliar))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("10. Deve retornar 400 ao tentar atualizar senha com campo vazio")
+    void deveRetornar400AoAtualizarSenhaVazia() throws Exception {
+        Usuario user = new Usuario();
+        user.setNome("User Teste");
+        user.setEmail("user@teste.com");
+        user.setCpf("12312312312");
+        user.setSenha("antiga");
+        user.setTipo(TipoUsuario.GESTOR);
+        user.setAsilo(asiloSalvo);
+        user.setAtivo(true);
+        usuarioRepository.save(user);
+
+        // DTO vazio (supondo que @NotBlank esteja no DTO)
+        AtualizarSenhaDTO dto = new AtualizarSenhaDTO("");
+
+        mockMvc.perform(patch("/usuarios/" + user.getId() + "/senha")
+                        .header("Authorization", "Bearer " + tokenGestor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest());
+    }
 }

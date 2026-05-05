@@ -17,7 +17,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("API - MONSAI")
                         .description("MONITORAMENTO INTEGRADO DE SAUDE DO IDOSO.")
-                        .version("1.0")
+                        .version("2.5")
                         .contact(new Contact()
                                 .name("MONSAI")
                                 .email("suporte@MONSAI.com")))
