@@ -1,0 +1,71 @@
+services:
+  - type: web
+    name: aaci-monsai-backend
+    runtime: docker # Alterado para Docker pois o Render não tem runtime Java nativo
+    plan: free
+    region: oregon
+    autoDeployTrigger: commit
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+
+      # --- Variáveis de Sistema do Banco (Necessárias para a URL abaixo) ---
+      - key: DATABASE_HOST
+        fromDatabase:
+          name: aaci-monsai-db
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: aaci-monsai-db
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: aaci-monsai-db
+          property: database
+
+      # --- Configurações do Banco de Dados ---
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aaci-monsai-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aaci-monsai-db
+          property: password
+
+      # --- Segurança e JWT ---
+      - key: SECURITY_JWT_SECRET
+        generateValue: true
+      - key: SECURITY_JWT_EXPIRATION
+        value: "86400000"
+
+      # --- Hibernate / JPA ---
+      - key: SPRING_JPA_HIBERNATE_DDL_AUTO
+        value: update
+      - key: SPRING_JPA_SHOW_SQL
+        value: "true"
+      - key: SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL
+        value: "true"
+
+      # --- MQTT ---
+      - key: MQTT_BROKER_URL
+        sync: false
+      - key: MQTT_USER
+        sync: false
+      - key: MQTT_PASS
+        sync: false
+      - key: MQTT_TOPIC
+        value: monsai/telemetria
+      - key: MQTT_CLIENT_ID
+        value: monsai-backend-api
+
+databases:
+  - name: aaci-monsai-db
+    databaseName: monsai_db
+    user: monsai_admin
+    plan: free

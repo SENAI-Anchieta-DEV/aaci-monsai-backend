@@ -50,11 +50,19 @@ public class GlobalExceptionHandler {
     }
 
     // =======================================================
-    // 409 CONFLICT - Violação de Constraint no Banco de Dados (E-mail ou Serial único)
+    // 409 CONFLICT - Violação de Constraint no Banco de Dados
     // =======================================================
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Conflito de dados: Já existe um registro no banco de dados com esta mesma informação (ex: e-mail ou serial de dispositivo).");
+        // Extrai a mensagem real do banco de dados (Postgres, MySQL, etc) para não esconder o erro verdadeiro
+        String mensagemReal = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : ex.getMessage();
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "Erro de integridade no banco de dados. Causa real: " + mensagemReal
+        );
         problemDetail.setProperty("timestamp", LocalDateTime.now());
         return problemDetail;
     }

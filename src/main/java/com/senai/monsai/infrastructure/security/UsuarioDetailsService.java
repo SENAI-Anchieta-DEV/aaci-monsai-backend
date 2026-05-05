@@ -24,11 +24,10 @@ UsuarioDetailsService implements UserDetailsService {
 
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getTipo().name()));
         System.out.println("DEBUG: Carregando usuário " + usuario.getEmail() + " com a role: " + authorities);
-
         return new User(
                 usuario.getEmail(),
                 usuario.getSenha(),
-                List.of(new SimpleGrantedAuthority(usuario.getTipo().name()))
+                authorities
         );
     }
 }
