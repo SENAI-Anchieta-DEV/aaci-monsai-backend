@@ -15,15 +15,15 @@ services:
       # --- Variáveis de Sistema do Banco (Necessárias para a URL abaixo) ---
       - key: DATABASE_HOST
         fromDatabase:
-          name: aaci-monsai-db-v2
+          name: aaci-monsai-db
           property: host
       - key: DATABASE_PORT
         fromDatabase:
-          name: aaci-monsai-db-v2
+          name: aaci-monsai-db
           property: port
       - key: DATABASE_NAME
         fromDatabase:
-          name: aaci-monsai-db-v2
+          name: aaci-monsai-db
           property: database
 
       # --- Configurações do Banco de Dados ---
@@ -31,11 +31,11 @@ services:
         value: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
       - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
-          name: aaci-monsai-db-v2
+          name: aaci-monsai-db
           property: user
       - key: SPRING_DATASOURCE_PASSWORD
         fromDatabase:
-          name: aaci-monsai-db-v2
+          name: aaci-monsai-db
           property: password
 
       # --- Segurança e JWT ---
