@@ -218,4 +218,115 @@ class IdosoRepositoryTest {
         List<Idoso> resultado = idosoRepository.findByAsiloId(999L);
         assertThat(resultado).isEmpty();
     }
+
+    @Test
+    @DisplayName("13. Deve atualizar dados cadastrais do idoso com sucesso")
+    void deveAtualizarDadosCadastraisDoIdoso() {
+        // Arrange
+        Idoso idoso = Idoso.builder()
+                .nome("Dona Maria")
+                .cpf("111.222.333-44")
+                .email("maria.antigo@email.com")
+                .asilo(asiloSalvo)
+                .build();
+        Idoso salvo = idosoRepository.saveAndFlush(idoso);
+
+        // Act — Gestor atualiza dados cadastrais (RF04)
+        salvo.setNome("Dona Maria de Souza");
+        salvo.setEmail("maria.novo@email.com");
+        Idoso atualizado = idosoRepository.saveAndFlush(salvo);
+
+        // Assert
+        assertThat(atualizado.getNome()).isEqualTo("Dona Maria de Souza");
+        assertThat(atualizado.getEmail()).isEqualTo("maria.novo@email.com");
+    }
+
+    @Test
+    @DisplayName("14. Deve encontrar idoso pelo ID com sucesso")
+    void deveBuscarIdosoPorId() {
+        // Arrange
+        Idoso idoso = Idoso.builder()
+                .nome("Seu Augusto")
+                .cpf("555.666.777-88")
+                .asilo(asiloSalvo)
+                .build();
+        Idoso salvo = entityManager.persistFlushFind(idoso);
+
+        // Act
+        var encontrado = idosoRepository.findById(salvo.getId());
+
+        // Assert
+        assertThat(encontrado).isPresent();
+        assertThat(encontrado.get().getNome()).isEqualTo("Seu Augusto");
+    }
+
+    @Test
+    @DisplayName("15. Deve persistir idoso com status ativo true por padrão")
+    void devePersistirIdosoComAtivoTrue() {
+        // Arrange
+        Idoso idoso = Idoso.builder()
+                .nome("Padrão Ativo")
+                .cpf("DEFAULT-ATIVO")
+                .asilo(asiloSalvo)
+                .build();
+
+        // Act
+        Idoso salvo = idosoRepository.saveAndFlush(idoso);
+        entityManager.clear();
+        Idoso encontrado = idosoRepository.findById(salvo.getId()).orElseThrow();
+
+        // Assert
+        assertThat(encontrado.isAtivo()).isTrue();
+    }
+
+    @Test
+    @DisplayName("16. Deve retornar apenas idosos ativos ao listar por asilo")
+    void deveRetornarIdososAtivosPorAsilo() {
+        // Arrange
+        Idoso ativo = Idoso.builder()
+                .nome("Ativo Teste")
+                .cpf("ATIVO-CPF")
+                .asilo(asiloSalvo)
+                .ativo(true)
+                .build();
+
+        Idoso inativo = Idoso.builder()
+                .nome("Inativo Teste")
+                .cpf("INATIVO-CPF")
+                .asilo(asiloSalvo)
+                .ativo(false)
+                .build();
+
+        entityManager.persist(ativo);
+        entityManager.persist(inativo);
+        entityManager.flush();
+
+        // Act
+        List<Idoso> resultado = idosoRepository.findByAsiloId(asiloSalvo.getId());
+
+        // Assert
+        assertThat(resultado).hasSize(2);
+        assertThat(resultado).extracting(Idoso::getNome)
+                .containsExactlyInAnyOrder("Ativo Teste", "Inativo Teste");
+    }
+    @Test
+    @DisplayName("17. Deve persistir email do idoso e recuperar corretamente")
+    void devePersistirEmailDoIdoso() {
+        // Arrange
+        String email = "idoso.familia@email.com";
+        Idoso idoso = Idoso.builder()
+                .nome("Com Email")
+                .cpf("EMAIL-CPF-01")
+                .email(email)
+                .asilo(asiloSalvo)
+                .build();
+
+        // Act
+        Idoso salvo = idosoRepository.saveAndFlush(idoso);
+        entityManager.clear();
+        Idoso encontrado = idosoRepository.findById(salvo.getId()).orElseThrow();
+
+        // Assert
+        assertThat(encontrado.getEmail()).isEqualTo(email);
+    }
 }

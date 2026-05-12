@@ -9,6 +9,7 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,5 +95,102 @@ class AsiloRepositoryTest {
     void deveRetornarVazioParaIdFicticio() {
         Optional<Asilo> resultado = asiloRepository.findById(9999L);
         assertThat(resultado).isEmpty();
+    }
+
+    @Test
+    @DisplayName("6. Deve atualizar nome e endereço do asilo com sucesso")
+    void deveAtualizarDadosCadastraisDoAsilo() {
+        // Arrange
+        Asilo asilo = new Asilo();
+        asilo.setNome("Nome Antigo");
+        asilo.setCnpj("44.444.444/0001-44");
+        asilo.setEndereco("Rua Velha, 1");
+        Asilo salvo = asiloRepository.saveAndFlush(asilo);
+
+        // Act
+        salvo.setNome("Nome Atualizado");
+        salvo.setEndereco("Av. Nova, 200");
+        Asilo atualizado = asiloRepository.saveAndFlush(salvo);
+
+        // Assert
+        assertThat(atualizado.getNome()).isEqualTo("Nome Atualizado");
+        assertThat(atualizado.getEndereco()).isEqualTo("Av. Nova, 200");
+    }
+
+    @Test
+    @DisplayName("7. Deve lançar exceção ao tentar salvar asilo sem CNPJ")
+    void deveFalharAoSalvarAsiloSemCnpj() {
+        // Arrange
+        Asilo semCnpj = new Asilo();
+        semCnpj.setNome("Asilo Sem CNPJ");
+        // CNPJ não preenchido — coluna nullable = false
+
+        // Act & Assert
+        assertThrows(DataIntegrityViolationException.class, () -> {
+            asiloRepository.saveAndFlush(semCnpj);
+        });
+    }
+
+    @Test
+    @DisplayName("8. Deve listar todos os asilos cadastrados no sistema")
+    void deveListarTodosOsAsilos() {
+        // Arrange
+        Asilo a1 = new Asilo();
+        a1.setNome("Asilo Alpha");
+        a1.setCnpj("55.555.555/0001-55");
+
+        Asilo a2 = new Asilo();
+        a2.setNome("Asilo Beta");
+        a2.setCnpj("66.666.666/0001-66");
+
+        entityManager.persist(a1);
+        entityManager.persist(a2);
+        entityManager.flush();
+
+        // Act
+        List<Asilo> todos = asiloRepository.findAll();
+
+        // Assert — ao menos os 2 que acabamos de inserir existem
+        assertThat(todos).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(todos).extracting(Asilo::getNome)
+                .contains("Asilo Alpha", "Asilo Beta");
+    }
+
+    @Test
+    @DisplayName("9. Deve deletar um asilo e confirmar sua ausência")
+    void deveDeletarAsiloEConfirmarAusencia() {
+        // Arrange
+        Asilo asilo = new Asilo();
+        asilo.setNome("Asilo Para Deletar");
+        asilo.setCnpj("77.777.777/0001-77");
+        Asilo salvo = entityManager.persistAndFlush(asilo);
+        Long id = salvo.getId();
+
+        // Act
+        asiloRepository.deleteById(id);
+        entityManager.flush();
+        entityManager.clear();
+
+        // Assert
+        Optional<Asilo> deletado = asiloRepository.findById(id);
+        assertThat(deletado).isEmpty();
+    }
+
+    @Test
+    @DisplayName("10. Deve reativar um asilo que estava desativado")
+    void deveReativarAsiloDesativado() {
+        // Arrange
+        Asilo asilo = new Asilo();
+        asilo.setNome("Asilo Inativo");
+        asilo.setCnpj("88.888.888/0001-88");
+        asilo.setAtivo(false);
+        Asilo salvo = asiloRepository.saveAndFlush(asilo);
+
+        // Act
+        salvo.setAtivo(true);
+        Asilo reativado = asiloRepository.saveAndFlush(salvo);
+
+        // Assert
+        assertThat(reativado.isAtivo()).isTrue();
     }
 }

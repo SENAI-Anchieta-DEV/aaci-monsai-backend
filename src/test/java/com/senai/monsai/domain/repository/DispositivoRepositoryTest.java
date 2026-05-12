@@ -1,6 +1,7 @@
 package com.senai.monsai.domain.repository;
 
 import com.senai.monsai.domain.entity.Dispositivo;
+import com.senai.monsai.domain.enums.StatusDispositivo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,8 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -110,5 +113,102 @@ class DispositivoRepositoryTest {
         // Assert
         Optional<Dispositivo> deletado = dispositivoRepository.findById(idGerado);
         assertThat(deletado).isEmpty();
+    }
+
+    @Test
+    @DisplayName("6. Deve atualizar status do dispositivo para ATIVO ao reconectar")
+    void deveAtualizarStatusParaAtivo() {
+        // Arrange
+        Dispositivo dispositivo = Dispositivo.builder()
+                .serial("SN-OFFLINE-01")
+                .statusDispositivo(StatusDispositivo.INATIVO)
+                .nivelBateria(40)
+                .build();
+        Dispositivo salvo = dispositivoRepository.save(dispositivo);
+
+        // Act — simula reconexão
+        salvo.setStatusDispositivo(StatusDispositivo.ATIVO);
+        salvo.setUltimoContato(LocalDateTime.now());
+        Dispositivo atualizado = dispositivoRepository.saveAndFlush(salvo);
+
+        // Assert
+        assertThat(atualizado.getStatusDispositivo()).isEqualTo(StatusDispositivo.ATIVO);
+        assertThat(atualizado.getUltimoContato()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("7. Deve registrar status ALERTA no dispositivo ao detectar anormalidade")
+    void deveRegistrarStatusAlerta() {
+        // Arrange
+        Dispositivo dispositivo = Dispositivo.builder()
+                .serial("SN-ALERTA-01")
+                .statusDispositivo(StatusDispositivo.ATIVO)
+                .nivelBateria(80)
+                .build();
+        Dispositivo salvo = dispositivoRepository.save(dispositivo);
+
+        // Act — sistema detecta queda e sinaliza alerta
+        salvo.setStatusDispositivo(StatusDispositivo.ALERTA);
+        Dispositivo emAlerta = dispositivoRepository.saveAndFlush(salvo);
+
+        // Assert
+        assertThat(emAlerta.getStatusDispositivo()).isEqualTo(StatusDispositivo.ALERTA);
+    }
+    @Test
+    @DisplayName("8. Deve persistir e recuperar o campo ultimoContato corretamente")
+    void devePersistirUltimoContato() {
+        // Arrange
+        LocalDateTime agora = LocalDateTime.now().withNano(0); // sem nanos para comparação precisa
+        Dispositivo dispositivo = Dispositivo.builder()
+                .serial("SN-CONTATO-01")
+                .ultimoContato(agora)
+                .nivelBateria(60)
+                .build();
+
+        // Act
+        Dispositivo salvo = dispositivoRepository.saveAndFlush(dispositivo);
+        entityManager.clear();
+        Optional<Dispositivo> encontrado = dispositivoRepository.findById(salvo.getId());
+
+        // Assert
+        assertThat(encontrado).isPresent();
+        assertThat(encontrado.get().getUltimoContato()).isEqualTo(agora);
+    }
+    @Test
+    @DisplayName("9. Deve listar todos os dispositivos cadastrados")
+    void deveListarTodosOsDispositivos() {
+        // Arrange
+        Dispositivo d1 = Dispositivo.builder().serial("SN-LIST-01").build();
+        Dispositivo d2 = Dispositivo.builder().serial("SN-LIST-02").build();
+        Dispositivo d3 = Dispositivo.builder().serial("SN-LIST-03").build();
+
+        entityManager.persist(d1);
+        entityManager.persist(d2);
+        entityManager.persist(d3);
+        entityManager.flush();
+
+        // Act
+        List<Dispositivo> todos = dispositivoRepository.findAll();
+
+        // Assert
+        assertThat(todos).hasSizeGreaterThanOrEqualTo(3);
+        assertThat(todos).extracting(Dispositivo::getSerial)
+                .contains("SN-LIST-01", "SN-LIST-02", "SN-LIST-03");
+    }
+
+    @Test
+    @DisplayName("10. Deve lançar exceção ao tentar salvar dispositivo sem serial")
+    void deveFalharAoSalvarDispositivoSemSerial() {
+        // Arrange
+        Dispositivo semSerial = Dispositivo.builder()
+                .nivelBateria(50)
+                .statusDispositivo(StatusDispositivo.INATIVO)
+                .build();
+        // serial = null, coluna nullable = false
+
+        // Act & Assert
+        assertThrows(DataIntegrityViolationException.class, () -> {
+            dispositivoRepository.saveAndFlush(semSerial);
+        });
     }
 }
