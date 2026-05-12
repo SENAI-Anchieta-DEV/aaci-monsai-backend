@@ -163,4 +163,6 @@ class UsuarioControllerIT {
                         .content("{}"))
                 .andExpect(status().isForbidden()); // Espera um 403 Proibido com sucesso!
     }
+
+    
 }
