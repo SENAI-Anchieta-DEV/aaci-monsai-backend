@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Spring%20Boot-4.0.2-02502c?style=for-the-badge&logo=springboot"/>
   <img src="https://img.shields.io/badge/Java-21-227e35?style=for-the-badge&logo=openjdk"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-16-096732?style=for-the-badge&logo=postgresql"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-18-096732?style=for-the-badge&logo=postgresql"/>
   <img src="https://img.shields.io/badge/MQTT-RealTime-649c7e?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/Auth-JWT-5cb52d?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/API-OpenAPI%20%2F%20Swagger-b0d693?style=for-the-badge"/>
