@@ -2,6 +2,7 @@ package com.senai.monsai.application.service;
 
 import com.senai.monsai.application.dto.AsiloCreateDTO; // ajuste o nome do DTO se diferente
 import com.senai.monsai.domain.entity.Asilo;
+import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
 import com.senai.monsai.domain.exception.RegraNegocioException;
 import com.senai.monsai.domain.repository.AsiloRepository;
@@ -65,9 +66,8 @@ public class AsiloServiceTest {
     // =========================================================
     // EDGE 2: Criar Asilo com CNPJ duplicado
     // =========================================================
-
     @Test
-    @DisplayName("AACI-112: Deve lançar RecursoNaoEncontradoException ao criar asilo com CNPJ já existente")
+    @DisplayName("AACI-112: Deve lançar RecursoDuplicadoException ao criar asilo com CNPJ já existente")
     void criaAsiloComCnpjDuplicado() {
         // GIVEN: CNPJ já existe no banco
         var dto = new AsiloCreateDTO(
@@ -79,9 +79,13 @@ public class AsiloServiceTest {
         when(asiloRepository.existsByCnpj(dto.cnpj()))
                 .thenReturn(true);
 
-        // WHEN & THEN
-        assertThrows(RecursoNaoEncontradoException.class,
-                () -> asiloService.criarAsilo(dto));
+        // WHEN & THEN: Captura a exceção de uma vez só e valida
+        RecursoDuplicadoException exception = assertThrows(
+                RecursoDuplicadoException.class,
+                () -> asiloService.criarAsilo(dto)
+        );
+
+        assertEquals("Já existe um asilo cadastrado com este CNPJ.", exception.getMessage());
 
         // Nenhum save deve ocorrer
         verify(asiloRepository, never()).save(any(Asilo.class));
@@ -139,7 +143,6 @@ public class AsiloServiceTest {
     // =========================================================
     // EDGE 5: Deve lançar exceção ao tentar atualizar um asilo inativo
     // =========================================================
-
     @Test
     @DisplayName("AACI-112: Deve lançar RegraNegocioException ao tentar atualizar asilo inativo")
     void deveLancarExcecaoAoAtualizarAsiloInativo() {
@@ -158,14 +161,20 @@ public class AsiloServiceTest {
         when(asiloRepository.findById(1L))
                 .thenReturn(Optional.of(asiloInativo));
 
-        // WHEN & THEN
-        assertThrows(RegraNegocioException.class,
-                () -> asiloService.atualizarAsilo(1L, dto));
+        // WHEN & THEN: Tenta atualizar e já captura a exceção
+        RegraNegocioException exception = assertThrows(
+                RegraNegocioException.class,
+                () -> asiloService.atualizarAsilo(1L, dto)
+        );
+
+        // Verifica a mensagem correta que o seu Service lança
+        assertEquals("Não é possível editar um asilo que está inativo.", exception.getMessage());
+
         verify(asiloRepository, never()).save(any(Asilo.class));
     }
 
     // =========================================================
-    // EDGE 5: Deve lançar exceção ao tentar atualizar um asilo inativo
+    // EDGE 6: Deve falhar ao atualizar com cnpj de outro asilo
     // =========================================================
 
     @Test
@@ -190,14 +199,14 @@ public class AsiloServiceTest {
                 .thenReturn(true);
 
         // WHEN & THEN
-        assertThrows(RecursoNaoEncontradoException.class,
+        assertThrows(RecursoDuplicadoException.class,
                 () -> asiloService.atualizarAsilo(1L, dto));
         verify(asiloRepository, never()).save(any(Asilo.class));
 
     }
 
     // =========================================================
-    // EDGE 6: Deve lançar exceção quando tentar atualizar um asilo inexistente
+    // EDGE 7: Deve lançar exceção quando tentar atualizar um asilo inexistente
     // =========================================================
 
     @Test

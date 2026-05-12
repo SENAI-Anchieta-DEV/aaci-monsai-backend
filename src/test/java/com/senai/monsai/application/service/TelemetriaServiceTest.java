@@ -19,8 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -57,10 +56,7 @@ public class TelemetriaServiceTest {
                 9.8
         );
 
-        var movimento = new TelemetriaDTO.MovimentoDTO(
-                aceleracao,
-                false
-        );
+        var movimento = new TelemetriaDTO.MovimentoDTO(aceleracao, false);
 
         var sinalVital = new TelemetriaDTO.SinalVitalDTO(
                 "SV-313",
@@ -93,70 +89,80 @@ public class TelemetriaServiceTest {
     }
 
     // =========================================================
-    // EDGE CASE 1: Processamento da telemetria sucesso
+    // EDGE CASE 1: Processamento da telemetria com sucesso
     // =========================================================
-
     @Test
-    @DisplayName("AACI-214: Deve processar a telemetria com sucesso")
+    @DisplayName("AACI-114: Deve processar a telemetria com sucesso")
     void processarTelemetria() {
-        // GIVEN
         when(dispositivoRepository.findBySerial(anyString()))
                 .thenReturn(Optional.of(dispositivoMock));
 
         when(faixaReferenciaRepository.findByIdosoId(anyLong()))
                 .thenReturn(Optional.empty());
 
-        // WHEN
         assertDoesNotThrow(() -> telemetriaService.processarTelemetria(telemetriaValida));
-
-        // THEN
         verify(mensagemMqttRepository, times(1)).save(any());
+        verify(dispositivoRepository, times(1)).save(dispositivoMock);
     }
 
     // =========================================================
     // EDGE CASE 2: Serial de dispositivo inexistente
     // =========================================================
-
     @Test
-    @DisplayName("AACI-112: Deve lançar exceção quando a serial de um dispositivo não existir")
+    @DisplayName("AACI-114: Deve lançar exceção por serial inexistente")
     void falhaPorSerialInexistente() {
-        // GIVEN: O banco não encontra nenhum dispositivo com o serial recebido
-        when(dispositivoRepository.findBySerial(anyString()))
-            .thenReturn(Optional.empty());
+        String msgEsperada = "Alerta: Dispositivo MON-313 não cadastrado!";
+        when(dispositivoRepository.findBySerial(anyString())).thenReturn(Optional.empty());
 
-        // WHEN & THEN: O service deve rejeitar o processamento
-        assertThrows(RecursoNaoEncontradoException.class,
-                () ->  telemetriaService.processarTelemetria(telemetriaValida));
+        RecursoNaoEncontradoException exception = assertThrows(
+                RecursoNaoEncontradoException.class,
+                () -> telemetriaService.processarTelemetria(telemetriaValida)
+        );
 
-        // Nenhuma mensagem deve ser salva se o dispositivo não existe
+        assertEquals(msgEsperada, exception.getMessage());
         verify(mensagemMqttRepository, never()).save(any());
     }
 
     // =========================================================
-    // EDGE CASE 2: FaixaReferencia presente — caminho alternativo
+    // EDGE CASE 3: Incompatibilidade entre Dispositivo e Paciente
     // =========================================================
-
     @Test
-    @DisplayName("AACI-112: Deve processar a Telemetria e utilizar a FaixaReferencia quando presente")
-    void processarTelemetriaComFaixaReferencia() {
-        // GIVEN: Dispositivo existe normalmente
-        when(dispositivoRepository.findBySerial("MON-313"))
-                .thenReturn(Optional.of(dispositivoMock));
+    @DisplayName("AACI-114: Deve lançar SecurityException por incompatibilidade de Idoso")
+    void falhaPorIncompatibilidadeDeIdoso() {
+        // DispositivoMock está vinculado ao idoso ID 1. Vamos mandar a telemetria pro ID 99.
+        TelemetriaDTO telemetriaInvalida = new TelemetriaDTO(99L, "MON-313", telemetriaValida.dataHora(),
+                telemetriaValida.sinalVital(), telemetriaValida.localizacao(), telemetriaValida.statusDoDispositivo());
 
-        // Cria a faixa de referencia com os limites da entidade
+        String msgEsperada = "Incompatibilidade entre dispositivo e paciente.";
+
+        when(dispositivoRepository.findBySerial(anyString())).thenReturn(Optional.of(dispositivoMock));
+
+        SecurityException exception = assertThrows(
+                SecurityException.class,
+                () -> telemetriaService.processarTelemetria(telemetriaInvalida)
+        );
+
+        assertEquals(msgEsperada, exception.getMessage());
+        verify(mensagemMqttRepository, never()).save(any());
+    }
+
+    // =========================================================
+    // EDGE CASE 4: FaixaReferencia presente (caminho alternativo)
+    // =========================================================
+    @Test
+    @DisplayName("AACI-114: Deve processar utilizando FaixaReferencia quando presente")
+    void processarTelemetriaComFaixaReferencia() {
+        when(dispositivoRepository.findBySerial("MON-313")).thenReturn(Optional.of(dispositivoMock));
+
         FaixaReferencia faixaMock = new FaixaReferencia();
         faixaMock.setMinBpm(60);
         faixaMock.setMaxBpm(100);
         faixaMock.setMinTemp(36.0);
         faixaMock.setMaxTemp(37.5);
 
-        when(faixaReferenciaRepository.findByIdosoId(1L))
-                .thenReturn(Optional.of(faixaMock));
+        when(faixaReferenciaRepository.findByIdosoId(1L)).thenReturn(Optional.of(faixaMock));
 
-        // WHEN & THEN: Sinais vitais dentro da faixa - não lança exception
         assertDoesNotThrow(() -> telemetriaService.processarTelemetria(telemetriaValida));
-
-        // Mensagem deve salvar normalmente
         verify(mensagemMqttRepository, times(1)).save(any());
     }
 }

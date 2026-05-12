@@ -1,11 +1,15 @@
 package com.senai.monsai.application.service;
 
 import com.senai.monsai.application.dto.IdosoCreateDTO;
+import com.senai.monsai.application.dto.IdosoUpdateDTO;
 import com.senai.monsai.domain.entity.Asilo;
+import com.senai.monsai.domain.entity.Dispositivo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.exception.IdosoNaoEncontradoException;
 import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
+import com.senai.monsai.domain.exception.RegraNegocioException;
 import com.senai.monsai.domain.repository.AsiloRepository;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.PulseiraRepository;
@@ -21,6 +25,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,123 +44,157 @@ public class IdosoServiceTest {
     @InjectMocks
     private IdosoService idosoService;
 
+    private Usuario usuarioGestor;
+    private Asilo asiloPadrao;
+
     @BeforeEach
     void setupSecurity() {
-        // Mock do SecurityContext para simular o usuário logado "admin@email.com"
+        // Mock do SecurityContext para simular o usuário logado
         SecurityContext securityContext = mock(SecurityContext.class);
         Authentication authentication = mock(Authentication.class);
         when(authentication.getName()).thenReturn("admin@email.com");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
+
+        // Instâncias comuns para reuso nos testes
+        asiloPadrao = new Asilo();
+        asiloPadrao.setId(1L);
+
+        usuarioGestor = new Usuario();
+        usuarioGestor.setAsilo(asiloPadrao);
     }
 
     // =========================================================
     // EDGE CASE 1: Deve cadastrar idoso com sucesso
     // =========================================================
-
     @Test
     @DisplayName("AACI-114: Cadastro de idoso com asilo e serial")
     void deveCriarIdosoComSucesso() {
-        // GIVEN: Dados do DTO fornecido por você
-        var dto = new IdosoCreateDTO("João", "111.222.333-44", "joao@email.com", "MON-313", 1L);
+        IdosoCreateDTO dto = new IdosoCreateDTO("João", "111.222.333-44", "joao@email.com", "MON-313", 1L);
 
-        Usuario usuarioLogado = new Usuario();
-        usuarioLogado.setAsilo(new Asilo()); // Usuário pertence a um asilo
+        when(usuarioRepository.findByEmail("admin@email.com")).thenReturn(Optional.of(usuarioGestor));
+        when(asiloRepository.findById(1L)).thenReturn(Optional.of(asiloPadrao));
+        when(idosoRepository.existsByCpf(dto.cpf())).thenReturn(false);
+        when(pulseiraRepository.save(any(Dispositivo.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(idosoRepository.save(any(Idoso.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        when(usuarioRepository.findByEmail("admin@email.com")).thenReturn(Optional.of(usuarioLogado));
-        when(asiloRepository.findById(1L)).thenReturn(Optional.of(new Asilo()));
-        when(idosoRepository.existsByCpf(anyString())).thenReturn(false);
+        Idoso resultado = idosoService.criarIdoso(dto);
 
-        // WHEN
-        idosoService.criarIdoso(dto);
-
-        // THEN
-        verify(pulseiraRepository, times(1)).save(any());
+        assertNotNull(resultado);
+        assertEquals("João", resultado.getNome());
+        verify(pulseiraRepository, times(1)).save(any(Dispositivo.class));
         verify(idosoRepository, times(1)).save(any(Idoso.class));
     }
 
     // =========================================================
     // EDGE CASE 2: Deve falhar se o ID do asilo não existir
     // =========================================================
-
-
     @Test
-    @DisplayName("AACI-115: Falha quando asiloId não existe")
+    @DisplayName("AACI-114: Falha quando asiloId não existe")
     void deveFalharParaAsiloInexistente() {
-        var dto = new IdosoCreateDTO("João", "111", "j@e.com", "MON-1", 99L);
+        IdosoCreateDTO dto = new IdosoCreateDTO("João", "111", "j@e.com", "MON-1", 99L);
+        String mensagemEsperada = "O Asilo informado no asiloId não existe.";
 
-        when(usuarioRepository.findByEmail(anyString())).thenReturn(Optional.of(new Usuario()));
+        when(usuarioRepository.findByEmail("admin@email.com")).thenReturn(Optional.of(usuarioGestor));
         when(asiloRepository.findById(99L)).thenReturn(Optional.empty());
 
-        // O erro lançado deve ser o que você definiu no código: "O Asilo informado no asiloId não existe."
-        assertThrows(RecursoNaoEncontradoException.class, () -> idosoService.criarIdoso(dto));
+        RecursoNaoEncontradoException exception = assertThrows(
+                RecursoNaoEncontradoException.class,
+                () -> idosoService.criarIdoso(dto)
+        );
+
+        assertEquals(mensagemEsperada, exception.getMessage());
     }
 
     // =========================================================
-    // EDGE CASE 3: CPF de idoso já cadastrado
+    // EDGE CASE 3: Deve lançar exception ao tentar cadastrar idoso com CPF duplicado
     // =========================================================
-
     @Test
-    @DisplayName("AACI-112: Deve lançar exception ao tentar cadastrar um idoso com CPF duplicado")
+    @DisplayName("AACI-114: Cadastro de idoso barrado por CPF duplicado")
     void deveFalharAoCriarIdosoComCpfDuplicado() {
-        // GIVEN: DTO com CPF que já existe no DB
-        var dto = new IdosoCreateDTO(
-                "Ana Luiza",
-                "111.222.333-44",
-                "familiarana@email.com",
-                "MON-999",
-                1L
+        IdosoCreateDTO dto = new IdosoCreateDTO("Ana", "111.222.333-44", "ana@email.com", "MON-999", 1L);
+        String mensagemEsperada = "Já existe um idoso cadastrado com este CPF.";
+
+        when(usuarioRepository.findByEmail("admin@email.com")).thenReturn(Optional.of(usuarioGestor));
+        when(asiloRepository.findById(1L)).thenReturn(Optional.of(asiloPadrao));
+        when(idosoRepository.existsByCpf(dto.cpf())).thenReturn(true);
+
+        RecursoDuplicadoException exception = assertThrows(
+                RecursoDuplicadoException.class,
+                () -> idosoService.criarIdoso(dto)
         );
 
-        // Usuário logado existe e possui um asilo associado
-        Usuario usuarioLogado = new Usuario();
-        usuarioLogado.setAsilo(new Asilo());
-        when(usuarioRepository.findByEmail(anyString()))
-                .thenReturn(Optional.of(usuarioLogado));
-
-        // O asilo informado no DTO existe
-        when(asiloRepository.findById(1L))
-                .thenReturn(Optional.of(new Asilo()));
-
-        // Simulação do CPF já cadastrado
-        when(idosoRepository.existsByCpf("111.222.333-44"))
-                .thenReturn(true);
-
-        // WHEN & THEN: O service deve barrar o cadastro com exception
-        // Ajuste a exception abaixo conforme a implementação real do service
-        assertThrows(RecursoDuplicadoException.class,
-                () -> idosoService.criarIdoso(dto));
-
+        assertEquals(mensagemEsperada, exception.getMessage());
         verify(idosoRepository, never()).save(any());
-        verify(pulseiraRepository, never()).save(any());
     }
 
     // =========================================================
-    // EDGE CASE 4: Usuário logado sem asilo vinculado
+    // EDGE CASE 4: Deve falhar quando Gestor tentar criar Idoso em asilo diferente do dele
     // =========================================================
-
     @Test
-    @DisplayName("AACI-112: Deve lançar exception quando um usuário logado não possui asilo")
-    void deveFalharQuandoUsuarioLogadoNaoTiverAsilo() {
-        // GIVEN: DTO válido em aparência
-        var dto = new IdosoCreateDTO(
-                "José Martins",
-                "555.666.777-88",
-                "familiarjose@email.com",
-                "MON-358",
-                1L
+    @DisplayName("AACI-114: Violação de Cross-Tenant no cadastro")
+    void deveFalharAoCadastrarEmOutroAsilo() {
+        IdosoCreateDTO dto = new IdosoCreateDTO("Pedro", "999", "p@email.com", "MON-5", 2L); // asiloDestino diferente (2L)
+        Asilo asiloDiferente = new Asilo();
+        asiloDiferente.setId(2L);
+        String mensagemEsperada = "Violação de segurança: Você não pode cadastrar um idoso em outro asilo.";
+
+        when(usuarioRepository.findByEmail("admin@email.com")).thenReturn(Optional.of(usuarioGestor));
+        when(asiloRepository.findById(2L)).thenReturn(Optional.of(asiloDiferente));
+
+        RegraNegocioException exception = assertThrows(
+                RegraNegocioException.class,
+                () -> idosoService.criarIdoso(dto)
         );
 
-        // O usuário logado existe, mas não possui asilo associado
-        Usuario usuarioSemAsilo = new Usuario();
+        assertEquals(mensagemEsperada, exception.getMessage());
+    }
 
-        when(usuarioRepository.findByEmail("admin@monsai.com"))
-                .thenReturn(Optional.of(usuarioSemAsilo));
+    // =========================================================
+    // EDGE CASE 5: Deve listar idosos apenas do Asilo do Gestor logado
+    // =========================================================
+    @Test
+    @DisplayName("AACI-114: Listagem filtrada por tenant (Asilo) do Gestor")
+    void deveListarApenasDoAsiloDoUsuario() {
+        Idoso idoso = new Idoso();
+        idoso.setAsilo(asiloPadrao);
 
-        // WHEN & THEN: O service deve detectar a divergência e lançar exceção
-        assertThrows(RecursoNaoEncontradoException.class,
-                () -> idosoService.criarIdoso(dto));
+        when(usuarioRepository.findByEmail("admin@email.com")).thenReturn(Optional.of(usuarioGestor));
+        when(idosoRepository.findByAsiloId(1L)).thenReturn(List.of(idoso));
 
-        verify(idosoRepository, never()).save(any());
+        List<Idoso> resultado = idosoService.listarTodos();
+
+        assertEquals(1, resultado.size());
+        verify(idosoRepository, times(1)).findByAsiloId(1L);
+        verify(idosoRepository, never()).findAll();
+    }
+
+    // =========================================================
+    // EDGE CASE 6: Deve inativar Idoso desvinculando dispositivo e cuidadores
+    // =========================================================
+    @Test
+    @DisplayName("AACI-114: Inativação de idoso com limpeza de vínculos")
+    void deveInativarIdosoComSucesso() {
+        Long idosoId = 10L;
+        Idoso idosoExistente = new Idoso();
+        idosoExistente.setId(idosoId);
+        idosoExistente.setAtivo(true);
+        idosoExistente.setAsilo(asiloPadrao); // Mesmo asilo do gestor
+        idosoExistente.setDispositivo(new Dispositivo());
+
+        Usuario cuidador = new Usuario();
+        cuidador.setIdosos(new ArrayList<>(List.of(idosoExistente))); // Arrays mutáveis
+        idosoExistente.setUsuarios(new ArrayList<>(List.of(cuidador)));
+
+        when(usuarioRepository.findByEmail("admin@email.com")).thenReturn(Optional.of(usuarioGestor));
+        when(idosoRepository.findById(idosoId)).thenReturn(Optional.of(idosoExistente));
+
+        idosoService.inativarIdoso(idosoId);
+
+        assertFalse(idosoExistente.isAtivo());
+        assertNull(idosoExistente.getDispositivo());
+        assertTrue(cuidador.getIdosos().isEmpty()); // O Idoso foi removido do cuidador
+        verify(idosoRepository, times(1)).save(idosoExistente);
+        verify(usuarioRepository, times(1)).save(cuidador);
     }
 }
