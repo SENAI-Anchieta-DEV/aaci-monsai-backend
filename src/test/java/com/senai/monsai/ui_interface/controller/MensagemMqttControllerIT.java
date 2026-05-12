@@ -3,11 +3,13 @@ package com.senai.monsai.ui_interface.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.senai.monsai.application.dto.TelemetriaDTO;
+import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Dispositivo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
 import com.senai.monsai.domain.enums.StatusDispositivo;
 import com.senai.monsai.domain.enums.TipoUsuario;
+import com.senai.monsai.domain.repository.AsiloRepository;
 import com.senai.monsai.domain.repository.DispositivoRepository;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
@@ -36,6 +38,7 @@ class MensagemMqttControllerIT {
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private DispositivoRepository dispositivoRepository;
     @Autowired private IdosoRepository idosoRepository;
+    @Autowired private AsiloRepository asiloRepository;
     @Autowired private JwtService jwtService;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -49,10 +52,18 @@ class MensagemMqttControllerIT {
     void setup() {
         // 1. Limpeza rigorosa para evitar conflitos entre testes
         idosoRepository.deleteAll();
-        dispositivoRepository.deleteAll();
         usuarioRepository.deleteAll();
+        asiloRepository.deleteAll();
+        dispositivoRepository.deleteAll();
 
-        // 2. Instanciar o dispositivo (Sem salvar ainda, o Idoso fará isso via Cascade)
+        // 2. Criar e SALVAR o Asilo primeiro
+        Asilo asilo = new Asilo();
+        asilo.setNome("Asilo de Teste MQTT");
+        asilo.setCnpj("12.345.678/0001-00");
+        asilo.setAtivo(true);
+        asilo = asiloRepository.saveAndFlush(asilo); // Salva para gerar o ID
+
+        // 3. Instanciar o dispositivo (Sem salvar ainda, o Idoso fará isso via Cascade)
         Dispositivo dispositivo = Dispositivo.builder()
                 .serial("SN-TEST-123")
                 .statusDispositivo(StatusDispositivo.ATIVO)
@@ -66,6 +77,7 @@ class MensagemMqttControllerIT {
                 .cpf("123.456.789-00")
                 .email("joao@email.com")
                 .ativo(true)
+                .asilo(asilo)
                 .dispositivo(dispositivo)
                 .build();
 
