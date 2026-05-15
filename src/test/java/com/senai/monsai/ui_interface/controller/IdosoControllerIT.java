@@ -33,12 +33,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class IdosoControllerIT {
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    @Autowired private IdosoRepository idosoRepository;
-    @Autowired private AsiloRepository asiloRepository;
-    @Autowired private UsuarioRepository usuarioRepository;
-    @Autowired private JwtService jwtService;
+    @Autowired
+    private IdosoRepository idosoRepository;
+    @Autowired
+    private AsiloRepository asiloRepository;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
+    private JwtService jwtService;
 
     private Asilo asiloSalvo;
     private String tokenGestor;
@@ -167,25 +172,37 @@ class IdosoControllerIT {
     }
 
     @Test
-    @DisplayName("5. Segurança: Não deve permitir acesso de outro asilo")
-    void naoDeveAcessarOutroAsilo() throws Exception {
-        // Criar um segundo asilo
+    @DisplayName("Gestor só deve listar idosos do seu próprio asilo")
+    void gestorSoListaIdososDoSeuAsilo() throws Exception {
+        // 1. Criar idoso para o asilo do gestor (asiloSalvo vem do @BeforeEach)
+        Idoso meuIdoso = Idoso.builder()
+                .nome("Idoso do Meu Asilo")
+                .cpf("111.111.111-11")
+                .asilo(asiloSalvo) // <--- Vincula ao asilo do setup
+                .ativo(true)
+                .build();
+        idosoRepository.saveAndFlush(meuIdoso); // <--- O Flush garante que está no banco
+
+        // 2. Criar outro asilo e outro idoso (para garantir que ele NÃO apareça)
         Asilo outroAsilo = new Asilo();
         outroAsilo.setNome("Outro Asilo");
-        outroAsilo.setCnpj("00000000000000");
-        outroAsilo = asiloRepository.save(outroAsilo);
+        outroAsilo.setCnpj("00.000.000/0001-99");
+        outroAsilo.setAtivo(true);
+        asiloRepository.saveAndFlush(outroAsilo);
 
-        // Criar idoso vinculado ao segundo asilo
-        Idoso idosoAlheio = new Idoso();
-        idosoAlheio.setNome("Idoso Alheio");
-        idosoAlheio.setCpf("00000000000");
-        idosoAlheio.setAsilo(outroAsilo);
-        idosoAlheio.setAtivo(true);
-        idosoAlheio = idosoRepository.save(idosoAlheio);
+        Idoso idosoAlheio = Idoso.builder()
+                .nome("Idoso Alheio")
+                .cpf("222.222.222-22")
+                .asilo(outroAsilo)
+                .ativo(true)
+                .build();
+        idosoRepository.saveAndFlush(idosoAlheio);
 
-        // Gestor do Asilo 1 tenta deletar idoso do Asilo 2
-        mockMvc.perform(delete("/idosos/" + idosoAlheio.getId())
+        // 3. Act & Assert
+        mockMvc.perform(get("/idosos")
                         .header("Authorization", "Bearer " + tokenGestor))
-                .andExpect(status().isBadRequest()); // RegraNegocioException mapeada para 400
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1)) // Agora deve vir 1
+                .andExpect(jsonPath("$[0].nome").value("Idoso do Meu Asilo"));
     }
 }
