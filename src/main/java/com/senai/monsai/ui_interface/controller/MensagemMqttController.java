@@ -20,11 +20,7 @@ public class MensagemMqttController {
     @PostMapping("/simular-sensor")
     @Operation(summary = "Simular recebimento de telemetria", description = "Simula uma pulseira enviando dados via MQTT")
     public ResponseEntity<String> dispararSimulacao(@Valid @RequestBody TelemetriaDTO dto) { // <-- @Valid adicionado
-
         telemetriaService.processarTelemetria(dto);
-
-        TelemetriaController.atualizarDados(dto);
-
         return ResponseEntity.ok("Simulação processada com sucesso. Verifique os alertas e o banco de dados.");
     }
 }
