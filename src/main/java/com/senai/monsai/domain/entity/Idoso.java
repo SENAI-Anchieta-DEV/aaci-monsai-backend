@@ -21,11 +21,12 @@ public class Idoso {
     private Long id;
 
     private String nome;
+    @Column(nullable = false, unique = true)
     private String cpf;
     private String email;
 
-    @ManyToOne
-    @JoinColumn(name = "asilo_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "asilo_id", nullable = false)
     @JsonIgnore
     private Asilo asilo;
 

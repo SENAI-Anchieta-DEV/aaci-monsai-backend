@@ -18,10 +18,11 @@ import java.util.List;
 public class Dispositivo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id; // O pulseira_id do JSON
+    @org.hibernate.annotations.UuidGenerator
+    @Column(name = "dispositivo_id")
+    private String id;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String serial; // Identificação física/técnica
 
     @OneToOne(mappedBy = "dispositivo")
