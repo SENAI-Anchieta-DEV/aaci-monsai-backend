@@ -60,7 +60,7 @@ public class IdosoControllerTest {
         ResponseEntity<List<Idoso>> response = idosoController.listarIdosos();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody(), "A lista não deve ser nula"); // CORREÇÃO AQUI
+        assertNotNull(response.getBody(), "A lista não deve ser nula");
         assertEquals(2, response.getBody().size());
         verify(idosoService, times(1)).listarTodos();
     }
@@ -111,7 +111,16 @@ public class IdosoControllerTest {
     @DisplayName("AACI-114: Atualização de idoso retorna 200 OK")
     void deveAtualizarIdosoComSucesso() {
         Long idIdoso = 1L;
-        IdosoUpdateDTO dto = new IdosoUpdateDTO("Maria Atualizada", "123", "novo@email.com");
+
+        // CORRIGIDO: Passando null para asiloId e dispositivoId para alinhar com o novo construtor
+        IdosoUpdateDTO dto = new IdosoUpdateDTO(
+                "Maria Atualizada",
+                "123",
+                "novo@email.com",
+                null,
+                null
+        );
+
         Idoso idosoAtualizado = new Idoso();
         idosoAtualizado.setNome(dto.nome());
 

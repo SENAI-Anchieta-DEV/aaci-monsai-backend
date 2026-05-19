@@ -18,14 +18,16 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean; // Novo local no SB 3.4+
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -40,6 +42,7 @@ class TelemetriaControllerIT {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());
 
@@ -56,26 +59,22 @@ class TelemetriaControllerIT {
 
     @BeforeEach
     void setup() {
-        // 1. Limpar usuários para evitar conflitos
         usuarioRepository.deleteAll();
 
-        // 2. CRIAR E SALVAR O USUÁRIO NO BANCO DE TESTE
-        // O Filtro de Segurança JWT vai buscar este cara no banco!
         Usuario gestor = Usuario.builder()
                 .nome("Admin Teste")
                 .email("admin@teste.com")
-                .senha("123456") // A senha não importa tanto pro JWT, mas o email sim
+                .senha("123456")
                 .tipo(TipoUsuario.GESTOR)
                 .ativo(true)
                 .build();
         usuarioRepository.save(gestor);
 
-        // 3. Gerar o token com o MESMO e-mail que salvamos acima
         tokenGestor = jwtService.generateToken("admin@teste.com", "ROLE_GESTOR");
 
-        // Resetar a variável estática do controller
-        TelemetriaController.atualizarDados(null);
+        // LINHA REMOVIDA: TelemetriaController.atualizarDados(null);
     }
+
     @Test
     @DisplayName("POST /api/telemetria - Deve retornar 201 ao receber dados válidos")
     void deveReceberTelemetriaComSucesso() throws Exception {
@@ -94,9 +93,10 @@ class TelemetriaControllerIT {
     }
 
     @Test
-    @DisplayName("GET /api/telemetria/alertas/{id} - Deve retornar lista de alertas mockados")
+    @DisplayName("GET /api/telemetria/alertas-mock - Deve retornar lista de alertas mockados")
     void deveRetornarAlertasDoIdoso() throws Exception {
-        mockMvc.perform(get("/api/telemetria/alertas/1")
+        // ROTA CORRIGIDA para /api/telemetria/alertas-mock
+        mockMvc.perform(get("/api/telemetria/alertas-mock")
                         .header("Authorization", "Bearer " + tokenGestor))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0]").value("⚠️ ANOMALIA CARDÍACA: BPM registrado em 125"))
@@ -106,6 +106,9 @@ class TelemetriaControllerIT {
     @Test
     @DisplayName("GET /api/telemetria/ultima - Deve retornar 204 quando não houver dados")
     void deveRetornarNoContentQuandoSemDados() throws Exception {
+        // Moca o comportamento do service retornando um map vazio ou nula para forçar o 204
+        when(telemetriaService.getUltimasTelemetrias()).thenReturn(Collections.emptyMap());
+
         mockMvc.perform(get("/api/telemetria/ultima")
                         .header("Authorization", "Bearer " + tokenGestor))
                 .andExpect(status().isNoContent());
@@ -140,5 +143,4 @@ class TelemetriaControllerIT {
                 statusDisp
         );
     }
-
 }
