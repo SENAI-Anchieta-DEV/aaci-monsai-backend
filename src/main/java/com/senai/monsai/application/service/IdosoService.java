@@ -10,10 +10,7 @@ import com.senai.monsai.domain.exception.IdosoNaoEncontradoException;
 import com.senai.monsai.domain.exception.RecursoDuplicadoException;
 import com.senai.monsai.domain.exception.RecursoNaoEncontradoException;
 import com.senai.monsai.domain.exception.RegraNegocioException;
-import com.senai.monsai.domain.repository.AsiloRepository;
-import com.senai.monsai.domain.repository.IdosoRepository;
-import com.senai.monsai.domain.repository.PulseiraRepository; // Troque para DispositivoRepository se você renomeou o arquivo
-import com.senai.monsai.domain.repository.UsuarioRepository;
+import com.senai.monsai.domain.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +22,7 @@ import java.util.List;
 public class IdosoService {
     private final IdosoRepository idosoRepository;
     private final PulseiraRepository pulseiraRepository;
+    private final DispositivoRepository dispositivoRepository;
     private final UsuarioRepository usuarioRepository;
     private final AsiloRepository asiloRepository;
 
@@ -82,35 +80,65 @@ public class IdosoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Idoso com a pulseira " + serial + " não encontrado."));
     }
 
-        public Idoso atualizarIdoso(Long idIdoso, IdosoUpdateDTO dto) {
-            String emailUsuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
-            Usuario usuarioLogado = usuarioRepository.findByEmail(emailUsuarioLogado)
-                    .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado."));
+    public Idoso atualizarIdoso(Long idIdoso, IdosoUpdateDTO dto) {
+        String emailUsuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
+        Usuario usuarioLogado = usuarioRepository.findByEmail(emailUsuarioLogado)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado."));
 
-            Idoso idoso = idosoRepository.findById(idIdoso)
-                    .orElseThrow(IdosoNaoEncontradoException::new);
+        Idoso idoso = idosoRepository.findById(idIdoso)
+                .orElseThrow(IdosoNaoEncontradoException::new);
 
-            if (!idoso.isAtivo()) {
-                throw new RegraNegocioException("Não é possível editar os dados de um idoso inativo.");
-            }
+        if (!idoso.isAtivo()) {
+            throw new RegraNegocioException("Não é possível editar os dados de um idoso inativo.");
+        }
 
-            // Validação de Segurança: O usuário logado NÃO PODE editar um idoso de outro asilo
-            if (usuarioLogado.getAsilo() != null && !usuarioLogado.getAsilo().getId().equals(idoso.getAsilo().getId())) {
-                throw new RegraNegocioException("Violação de segurança: Você não tem permissão para editar um idoso de outro asilo.");
-            }
+        // Validação de Segurança: O usuário logado NÃO PODE editar um idoso de outro asilo
+        if (usuarioLogado.getAsilo() != null && !usuarioLogado.getAsilo().getId().equals(idoso.getAsilo().getId())) {
+            throw new RegraNegocioException("Violação de segurança: Você não tem permissão para editar um idoso de outro asilo.");
+        }
 
-            // Se o CPF mudou na edição, verifica se o novo CPF já existe no banco
-            if (!idoso.getCpf().equals(dto.cpf()) && idosoRepository.existsByCpf(dto.cpf())) {
+        // --- ATUALIZAÇÕES PARCIAIS (Só altera se for enviado no DTO) ---
+
+        if (dto.nome() != null) {
+            idoso.setNome(dto.nome());
+        }
+
+        if (dto.email() != null) {
+            idoso.setEmail(dto.email());
+        }
+
+        // Validação do CPF (Só valida se o CPF foi enviado E se é diferente do atual)
+        if (dto.cpf() != null && !idoso.getCpf().equals(dto.cpf())) {
+            if (idosoRepository.existsByCpf(dto.cpf())) {
                 throw new RecursoDuplicadoException("Já existe outro idoso cadastrado com este CPF.");
             }
-
-
-            idoso.setNome(dto.nome());
             idoso.setCpf(dto.cpf());
-            idoso.setEmail(dto.email());
-
-            return idosoRepository.save(idoso);
         }
+
+        // Atualização do Asilo
+        if (dto.asiloId() != null) {
+            Asilo novoAsilo = asiloRepository.findById(dto.asiloId())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Asilo não encontrado."));
+            idoso.setAsilo(novoAsilo);
+        }
+
+        // Atualização do Dispositivo
+        if (dto.dispositivoId() != null) {
+            Dispositivo novoDispositivo = dispositivoRepository.findById(dto.dispositivoId())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Dispositivo não encontrado."));
+
+            // Se o idoso já tinha um dispositivo diferente, desvincula o antigo primeiro
+            if (idoso.getDispositivo() != null && !idoso.getDispositivo().getId().equals(novoDispositivo.getId())) {
+                idoso.getDispositivo().setIdoso(null);
+            }
+
+            // Atualiza os dois lados da relação @OneToOne
+            idoso.setDispositivo(novoDispositivo);
+            novoDispositivo.setIdoso(idoso);
+        }
+
+        return idosoRepository.save(idoso);
+    }
 
     public void inativarIdoso(Long idIdoso) {
         String emailUsuarioLogado = SecurityContextHolder.getContext().getAuthentication().getName();
