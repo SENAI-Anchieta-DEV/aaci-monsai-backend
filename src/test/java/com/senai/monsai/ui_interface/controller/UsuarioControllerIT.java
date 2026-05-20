@@ -162,28 +162,23 @@ class UsuarioControllerIT {
         enfermeiro.setAtivo(true);
         usuarioRepository.save(enfermeiro);
 
-        // 2. Geramos um token válido para esse enfermeiro
         String tokenEnfermeiro = jwtService.generateToken(enfermeiro.getEmail(), "ROLE_ENFERMEIRO");
-
-        // 3. Criamos um JSON VÁLIDO (para não cair no erro 400 de validação)
-        // Usamos um bloco de texto para facilitar a leitura do JSON
         String jsonCorreto = """
-                {
-                    "nome": "Usuário de Teste",
-                    "email": "teste@monsai.com",
-                    "cpf": "12345678901",
-                    "senha": "password123",
-                    "tipo": "CUIDADOR",
-                    "asiloId": %d
-                }
-                """.formatted(asiloSalvo.getId());
+            {
+                "nome": "Usuário de Teste",
+                "email": "teste@monsai.com",
+                "cpf": "98765432100",
+                "senha": "password123",
+                "tipoUsuario": "ENFERMEIRO",
+                "asiloId": %d
+            }
+            """.formatted(asiloSalvo.getId());
 
         // 4. Executamos a chamada
         mockMvc.perform(post("/usuarios")
                         .header("Authorization", "Bearer " + tokenEnfermeiro)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonCorreto)) // <--- Aqui está o segredo
-                .andExpect(status().isForbidden()); // Agora o 403 deve vir com sucesso!
-        //
+                        .content(jsonCorreto))
+                .andExpect(status().isForbidden());
     }
 }
