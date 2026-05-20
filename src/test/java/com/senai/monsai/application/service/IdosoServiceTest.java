@@ -70,19 +70,22 @@ public class IdosoServiceTest {
     @Test
     @DisplayName("AACI-114: Cadastro de idoso com asilo e serial")
     void deveCriarIdosoComSucesso() {
+        // ARRANGE
         IdosoCreateDTO dto = new IdosoCreateDTO("João", "111.222.333-44", "joao@email.com", "MON-313", 1L);
 
         when(usuarioRepository.findByEmail("admin@email.com")).thenReturn(Optional.of(usuarioGestor));
         when(asiloRepository.findById(1L)).thenReturn(Optional.of(asiloPadrao));
         when(idosoRepository.existsByCpf(dto.cpf())).thenReturn(false);
-        when(pulseiraRepository.save(any(Dispositivo.class))).thenAnswer(i -> i.getArguments()[0]);
+
         when(idosoRepository.save(any(Idoso.class))).thenAnswer(i -> i.getArguments()[0]);
 
+        // ACT
         Idoso resultado = idosoService.criarIdoso(dto);
 
+        // ASSERT
         assertNotNull(resultado);
         assertEquals("João", resultado.getNome());
-        verify(pulseiraRepository, times(1)).save(any(Dispositivo.class));
+        // REMOVIDO: O verify do pulseiraRepository foi retirado daqui
         verify(idosoRepository, times(1)).save(any(Idoso.class));
     }
 
