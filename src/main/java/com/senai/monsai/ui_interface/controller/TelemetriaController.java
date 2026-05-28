@@ -89,15 +89,15 @@ public class TelemetriaController {
     // ==========================================
     // 3. RETORNAR ÚLTIMA LEITURA (Para o Monitoramento.jsx)
     // ==========================================
+    private final Map<String, TelemetriaDTO> ultimasTelemetrias = new ConcurrentHashMap<>();
+
+    protected void atualizarDados(TelemetriaDTO dto) {
+        ultimasTelemetrias.put(dto.pulseiraId(), dto);
+    }
+
     @GetMapping("/ultima")
     public ResponseEntity<?> getUltimaTelemetria() {
-        Map<String, TelemetriaDTO> ultimas = telemetriaService.getUltimasTelemetrias();
-
-        if (ultimas == null || ultimas.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.ok(ultimas);
+        return ResponseEntity.ok(ultimasTelemetrias); // retorna o mapa inteiro
     }
 
 
