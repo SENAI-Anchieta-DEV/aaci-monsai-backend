@@ -18,6 +18,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional; // <-- Importado aqui
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -27,15 +28,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional // <-- Adicionado aqui para gerenciar e limpar o banco automaticamente via rollback
 class UsuarioControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
+
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+
     @Autowired
     private IdosoRepository idosoRepository;
+
     @Autowired
     private UsuarioRepository usuarioRepository;
+
     @Autowired
     private AsiloRepository asiloRepository;
 
@@ -47,9 +53,8 @@ class UsuarioControllerIT {
 
     @BeforeEach
     void setup() {
-        idosoRepository.deleteAll();
-        usuarioRepository.deleteAll();
-        asiloRepository.deleteAll();
+        // Os métodos deleteAll() foram removidos daqui.
+        // O @Transactional garante que cada teste execute em um banco limpo/isolado.
 
         // 1. Prepara um Asilo que será usado em todos os testes
         Asilo asilo = new Asilo();
@@ -87,7 +92,7 @@ class UsuarioControllerIT {
                 """.formatted(asiloSalvo.getId());
 
         mockMvc.perform(post("/usuarios")
-                        .header("Authorization", "Bearer " + tokenGestor) // <-- Passando o Token Real!
+                        .header("Authorization", "Bearer " + tokenGestor)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andDo(print())
@@ -98,7 +103,7 @@ class UsuarioControllerIT {
     @DisplayName("2. Deve listar todos os usuários cadastrados")
     void deveListarUsuarios() throws Exception {
         mockMvc.perform(get("/usuarios")
-                        .header("Authorization", "Bearer " + tokenGestor)) // <-- Passando o Token Real!
+                        .header("Authorization", "Bearer " + tokenGestor))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
@@ -106,7 +111,6 @@ class UsuarioControllerIT {
     @Test
     @DisplayName("3. Deve atualizar a senha de um usuário existente")
     void deveAtualizarSenha() throws Exception {
-        // Primeiro, salvamos um usuário no banco para ter quem atualizar
         Usuario user = new Usuario();
         user.setNome("Ana");
         user.setEmail("ana@teste.com");
@@ -117,11 +121,10 @@ class UsuarioControllerIT {
         user.setAtivo(true);
         user = usuarioRepository.save(user);
 
-        // DTO de atualização
         AtualizarSenhaDTO dto = new AtualizarSenhaDTO("NovaSenha123!");
 
         mockMvc.perform(patch("/usuarios/" + user.getId() + "/senha")
-                        .header("Authorization", "Bearer " + tokenGestor) // <-- Passando o Token Real!
+                        .header("Authorization", "Bearer " + tokenGestor)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isNoContent());
@@ -141,17 +144,15 @@ class UsuarioControllerIT {
         user = usuarioRepository.save(user);
 
         mockMvc.perform(delete("/usuarios/" + user.getId())
-                        .header("Authorization", "Bearer " + tokenGestor)) // <-- Passando o Token Real!
+                        .header("Authorization", "Bearer " + tokenGestor))
                 .andExpect(status().isNoContent());
 
-        // Verificação extra: se o campo ativo no banco agora é false
         assertFalse(usuarioRepository.findById(user.getId()).get().isAtivo());
     }
 
     @Test
     @DisplayName("5. Segurança: Enfermeiro não pode criar outros usuários")
     void funcionarioNaoPodeCriarUsuario() throws Exception {
-        // 1. Criamos o cenário (Enfermeiro no banco)
         Usuario enfermeiro = new Usuario();
         enfermeiro.setNome("Enfermeiro Teste");
         enfermeiro.setEmail("enfermeiro@teste.com");
@@ -162,28 +163,22 @@ class UsuarioControllerIT {
         enfermeiro.setAtivo(true);
         usuarioRepository.save(enfermeiro);
 
-        // 2. Geramos um token válido para esse enfermeiro
         String tokenEnfermeiro = jwtService.generateToken(enfermeiro.getEmail(), "ROLE_ENFERMEIRO");
-
-        // 3. Criamos um JSON VÁLIDO (para não cair no erro 400 de validação)
-        // Usamos um bloco de texto para facilitar a leitura do JSON
         String jsonCorreto = """
-                {
-                    "nome": "Usuário de Teste",
-                    "email": "teste@monsai.com",
-                    "cpf": "12345678901",
-                    "senha": "password123",
-                    "tipo": "CUIDADOR",
-                    "asiloId": %d
-                }
-                """.formatted(asiloSalvo.getId());
+            {
+                "nome": "Usuário de Teste",
+                "email": "teste@monsai.com",
+                "cpf": "98765432100",
+                "senha": "password123",
+                "tipoUsuario": "ENFERMEIRO",
+                "asiloId": %d
+            }
+            """.formatted(asiloSalvo.getId());
 
-        // 4. Executamos a chamada
         mockMvc.perform(post("/usuarios")
                         .header("Authorization", "Bearer " + tokenEnfermeiro)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonCorreto)) // <--- Aqui está o segredo
-                .andExpect(status().isForbidden()); // Agora o 403 deve vir com sucesso!
-        //
+                        .content(jsonCorreto))
+                .andExpect(status().isForbidden());
     }
 }

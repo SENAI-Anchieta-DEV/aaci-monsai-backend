@@ -113,8 +113,8 @@ class MensagemMqttControllerIT {
         );
 
         TelemetriaDTO dto = new TelemetriaDTO(
-                this.idosoIdExistente,      // ID do idoso correto no banco
-                this.dispositivoIdExistente, // ID da pulseira correta no banco
+                this.idosoIdExistente, // ID do idoso correto no banco (Long)
+                "SN-TEST-123",        // CORREÇÃO: Passando o SERIAL string esperado pelo Service, e não o UUID da PK
                 "2026-03-11T10:00:00",
                 sinais,
                 local,
@@ -126,7 +126,7 @@ class MensagemMqttControllerIT {
                         .header("Authorization", "Bearer " + tokenGestor)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()); // Agora o status esperado 200 vai bater!
     }
 
     @Test

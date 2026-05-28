@@ -110,4 +110,14 @@ public class TelemetriaController {
         // Retorna a lista que o Service preencheu
         return ResponseEntity.ok(TelemetriaService.ALERTA_CACHE);
     }
+
+    // ==========================================
+    // 5. ENVIAR COMANDO LED VIA MQTT
+    // ==========================================
+    @PostMapping("/comando-led")
+    @Operation(summary = "Envia comando LED", description = "Envia um sinal para ligar o LED da pulseira via MQTT")
+    public ResponseEntity<String> enviarComandoLed() {
+        mqttGateway.sendToMqtt("LIGAR_LED", "monsai/comandos");
+        return ResponseEntity.ok("Comando de ativação enviado para o Broker MQTT!");
+    }
 }

@@ -1,7 +1,7 @@
 services:
   - type: web
     name: aaci-monsai-backend
-    runtime: docker # Alterado para Docker pois o Render não tem runtime Java nativo
+    runtime: docker
     plan: free
     region: oregon
     autoDeployTrigger: commit
