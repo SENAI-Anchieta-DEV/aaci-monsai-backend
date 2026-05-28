@@ -46,7 +46,7 @@ public class TelemetriaService {
 
     @Transactional
     public void processarTelemetria(TelemetriaDTO dto) {
-        // 1. Busca o dispositivo no banco (AQUI ESTÁ A VARIÁVEL 'dispositivo'!)
+        // 1. Buscar o dispositivo
         Dispositivo dispositivo = dispositivoRepository.findBySerial(dto.pulseiraId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Alerta: Dispositivo " + dto.pulseiraId() + " não cadastrado!"));
 
