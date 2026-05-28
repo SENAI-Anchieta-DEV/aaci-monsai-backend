@@ -6,10 +6,12 @@ import com.senai.monsai.application.dto.IdosoUpdateDTO;
 import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Idoso;
 import com.senai.monsai.domain.entity.Usuario;
+import com.senai.monsai.domain.entity.Dispositivo; // Adicionado
 import com.senai.monsai.domain.enums.TipoUsuario;
 import com.senai.monsai.domain.repository.AsiloRepository;
 import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
+import com.senai.monsai.domain.repository.DispositivoRepository; // Adicionado
 import com.senai.monsai.infrastructure.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,21 +35,35 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class IdosoControllerIT {
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
-    @Autowired private IdosoRepository idosoRepository;
-    @Autowired private AsiloRepository asiloRepository;
-    @Autowired private UsuarioRepository usuarioRepository;
-    @Autowired private JwtService jwtService;
+
+    @Autowired
+    private IdosoRepository idosoRepository;
+
+    @Autowired
+    private AsiloRepository asiloRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private DispositivoRepository dispositivoRepository; // Injetado para os novos testes
+
+    @Autowired
+    private JwtService jwtService;
 
     private Asilo asiloSalvo;
     private String tokenGestor;
 
     @BeforeEach
     void setup() {
-        // Limpeza respeitando as constraints de integridade
+        // Limpeza respeitando as constraints de integridade relacional
         usuarioRepository.deleteAll();
         idosoRepository.deleteAll();
+        dispositivoRepository.deleteAll(); // Limpa dispositivos órfãos dos testes
         asiloRepository.deleteAll();
 
         // 1. Criar Asilo
@@ -58,7 +74,7 @@ class IdosoControllerIT {
         asilo.setAtivo(true);
         asiloSalvo = asiloRepository.save(asilo);
 
-        // 2. Criar GESTOR (O Service buscará esse usuário pelo e-mail do Token)
+        // 2. Criar GESTOR
         Usuario gestor = Usuario.builder()
                 .nome("Gestor de Teste")
                 .email("gestor@monsai.com")
@@ -78,14 +94,13 @@ class IdosoControllerIT {
     @Test
     @DisplayName("1. Deve criar idoso e vincular dispositivo")
     void deveCriarIdoso() throws Exception {
-        // PEGANDO O ID REAL GERADO NO SETUP
         String idRealDoBanco = asiloSalvo.getId().toString();
 
         IdosoCreateDTO dto = new IdosoCreateDTO(
                 "Benedito Silva",
                 "70275850021",
                 "benedito@email.com",
-                idRealDoBanco, // <--- ID DINÂMICO AQUI
+                idRealDoBanco,
                 3L
         );
 
@@ -103,7 +118,6 @@ class IdosoControllerIT {
     void naoDeveDuplicarCpf() throws Exception {
         String idRealDoBanco = asiloSalvo.getId().toString();
 
-        // Salva um idoso prévio para causar o conflito
         Idoso idosoExistente = new Idoso();
         idosoExistente.setNome("Já Existo");
         idosoExistente.setCpf("12345678901");
@@ -111,12 +125,11 @@ class IdosoControllerIT {
         idosoExistente.setAtivo(true);
         idosoRepository.save(idosoExistente);
 
-        // Tenta criar outro com o mesmo CPF
         IdosoCreateDTO dto = new IdosoCreateDTO(
                 "Novo",
                 "12345678901",
                 "email@email.com",
-                idRealDoBanco, // <--- ID DINÂMICO AQUI TAMBÉM
+                idRealDoBanco,
                 4L
         );
 
@@ -125,11 +138,11 @@ class IdosoControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andDo(print())
-                .andExpect(status().isConflict()); // Agora deve retornar 409 em vez de 404
+                .andExpect(status().isConflict());
     }
 
     @Test
-    @DisplayName("3. Deve atualizar dados do idoso")
+    @DisplayName("3. Deve atualizar dados básicos do idoso (Parcial)")
     void deveAtualizarIdoso() throws Exception {
         Idoso idoso = new Idoso();
         idoso.setNome("Original");
@@ -138,18 +151,67 @@ class IdosoControllerIT {
         idoso.setAtivo(true);
         idoso = idosoRepository.save(idoso);
 
-        IdosoUpdateDTO updateDto = new IdosoUpdateDTO("Nome Atualizado", "11122233344", "novo@email.com");
+        // Corrigido: Agora passa null para asiloId e dispositivoId
+        IdosoUpdateDTO updateDto = new IdosoUpdateDTO(
+                "Nome Atualizado",
+                "11122233344",
+                "novo@email.com",
+                null,
+                null
+        );
 
         mockMvc.perform(put("/idosos/" + idoso.getId())
                         .header("Authorization", "Bearer " + tokenGestor)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nome").value("Nome Atualizado"));
+                .andExpect(jsonPath("$.nome").value("Nome Atualizado"))
+                .andExpect(jsonPath("$.email").value("novo@email.com"));
     }
 
     @Test
-    @DisplayName("4. Deve inativar idoso e remover vínculo com dispositivo")
+    @DisplayName("4. Deve atualizar o asilo e o dispositivo do idoso")
+    void deveAtualizarAsiloEDispositivoDoIdoso() throws Exception {
+        // Cria o idoso inicial vinculado ao asilo padrão do setup
+        Idoso idoso = new Idoso();
+        idoso.setNome("Idoso Relacionamento");
+        idoso.setCpf("12398745611");
+        idoso.setAsilo(asiloSalvo);
+        idoso.setAtivo(true);
+        idoso = idosoRepository.save(idoso);
+
+        // Cria um NOVO asilo para simular a transferência
+        Asilo novoAsilo = new Asilo();
+        novoAsilo.setNome("Novo Asilo Filial");
+        novoAsilo.setCnpj("98765432000188");
+        novoAsilo.setAtivo(true);
+        novoAsilo = asiloRepository.save(novoAsilo);
+
+        // Cria um dispositivo físico no banco para ser vinculado
+        Dispositivo novoDispositivo = new Dispositivo();
+        novoDispositivo.setSerial("SENS-999-XYZ");
+        novoDispositivo = dispositivoRepository.save(novoDispositivo);
+
+        // Monta o DTO alterando apenas as chaves estrangeiras
+        IdosoUpdateDTO updateDto = new IdosoUpdateDTO(
+                null,
+                null,
+                null,
+                novoAsilo.getId(),
+                novoDispositivo.getId()
+        );
+
+        mockMvc.perform(put("/idosos/" + idoso.getId())
+                        .header("Authorization", "Bearer " + tokenGestor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome").value("Idoso Relacionamento")); // Nome deve continuar o mesmo
+    }
+
+    @Test
+    @DisplayName("5. Deve inativar idoso e remover vínculo com dispositivo")
     void deveInativarIdoso() throws Exception {
         Idoso idoso = new Idoso();
         idoso.setNome("Para Inativar");
@@ -167,25 +229,34 @@ class IdosoControllerIT {
     }
 
     @Test
-    @DisplayName("5. Segurança: Não deve permitir acesso de outro asilo")
-    void naoDeveAcessarOutroAsilo() throws Exception {
-        // Criar um segundo asilo
+    @DisplayName("6. Gestor só deve listar idosos do seu próprio asilo")
+    void gestorSoListaIdososDoSeuAsilo() throws Exception {
+        Idoso meuIdoso = Idoso.builder()
+                .nome("Idoso do Meu Asilo")
+                .cpf("111.111.111-11")
+                .asilo(asiloSalvo)
+                .ativo(true)
+                .build();
+        idosoRepository.saveAndFlush(meuIdoso);
+
         Asilo outroAsilo = new Asilo();
         outroAsilo.setNome("Outro Asilo");
-        outroAsilo.setCnpj("00000000000000");
-        outroAsilo = asiloRepository.save(outroAsilo);
+        outroAsilo.setCnpj("00.000.000/0001-99");
+        outroAsilo.setAtivo(true);
+        asiloRepository.saveAndFlush(outroAsilo);
 
-        // Criar idoso vinculado ao segundo asilo
-        Idoso idosoAlheio = new Idoso();
-        idosoAlheio.setNome("Idoso Alheio");
-        idosoAlheio.setCpf("00000000000");
-        idosoAlheio.setAsilo(outroAsilo);
-        idosoAlheio.setAtivo(true);
-        idosoAlheio = idosoRepository.save(idosoAlheio);
+        Idoso idosoAlheio = Idoso.builder()
+                .nome("Idoso Alheio")
+                .cpf("222.222.222-22")
+                .asilo(outroAsilo)
+                .ativo(true)
+                .build();
+        idosoRepository.saveAndFlush(idosoAlheio);
 
-        // Gestor do Asilo 1 tenta deletar idoso do Asilo 2
-        mockMvc.perform(delete("/idosos/" + idosoAlheio.getId())
+        mockMvc.perform(get("/idosos")
                         .header("Authorization", "Bearer " + tokenGestor))
-                .andExpect(status().isBadRequest()); // RegraNegocioException mapeada para 400
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].nome").value("Idoso do Meu Asilo"));
     }
 }

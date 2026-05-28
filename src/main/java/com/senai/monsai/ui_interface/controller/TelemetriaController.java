@@ -1,5 +1,6 @@
 package com.senai.monsai.ui_interface.controller;
 
+import com.senai.monsai.application.dto.AlertaDTO;
 import com.senai.monsai.application.dto.TelemetriaDTO;
 import com.senai.monsai.application.service.TelemetriaService;
 import com.senai.monsai.infrastructure.config.MqttGateway;
@@ -66,8 +67,6 @@ public class TelemetriaController {
             )
     )
     public ResponseEntity<String> receberTelemetria(@Valid @RequestBody TelemetriaDTO dto) {
-        // Se a pulseira for do idoso errado, o Service lançará uma SecurityException
-        // O seu GlobalExceptionHandler deve capturar isso e devolver um erro 403 (Forbidden) ou 400 (Bad Request)
         telemetriaService.processarTelemetria(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Dados de telemetria processados e analisados com sucesso!");
@@ -75,13 +74,10 @@ public class TelemetriaController {
 
 
     // ==========================================
-    // 2. BUSCAR ALERTAS (Para o Frontend/React)
+    // 2. BUSCAR ALERTAS (MOCK PARA TESTES ANTIGOS)
     // ==========================================
-    @GetMapping("/alertas/{idosoId}")
-    @Operation(summary = "Buscar alertas de um Idoso", description = "Retorna os alertas ativos gerados por anomalias nos sinais vitais")
-    public ResponseEntity<List<String>> buscarAlertasIdoso(@PathVariable Long idosoId) {
-        // No mundo real, você chamaria: telemetriaService.buscarAlertasPorIdoso(idosoId);
-        // Retornando uma simulação caso o Frontend já queira testar a tela:
+    @GetMapping("/alertas-mock")
+    public ResponseEntity<List<String>> buscarAlertasMock() {
         List<String> alertasMock = List.of(
                 "⚠️ ANOMALIA CARDÍACA: BPM registrado em 125",
                 "🔋 BATERIA FRACA: Dispositivo com apenas 10%"
@@ -91,7 +87,7 @@ public class TelemetriaController {
 
 
     // ==========================================
-    // 3. RETORNAR ÚLTIMA LEITURA (Para o Frontend/React)
+    // 3. RETORNAR ÚLTIMA LEITURA (Para o Monitoramento.jsx)
     // ==========================================
     private final Map<String, TelemetriaDTO> ultimasTelemetrias = new ConcurrentHashMap<>();
 
@@ -106,13 +102,12 @@ public class TelemetriaController {
 
 
     // ==========================================
-    // 4. ENVIAR COMANDO PARA A PULSEIRA (MQTT)
+    // 4. RETORNAR OS ALERTAS ATIVOS (Para o HistoricoAlertas.jsx)
     // ==========================================
-    @PostMapping("/comando-led")
-    @Operation(summary = "Acionar LED", description = "Envia um comando via MQTT para ligar o LED da pulseira (ex: localizar paciente)")
-    public ResponseEntity<String> enviarComando() {
-        System.out.println("🚀 [JAVA]: Disparando comando LIGAR_LED via Gateway...");
-        mqttGateway.sendToMqtt("LIGAR_LED", "monsai/comandos");
-        return ResponseEntity.ok("Comando de ativação enviado para o Broker MQTT!");
+    @GetMapping("/alertas-recentes")
+    @Operation(summary = "Alertas em Tempo Real", description = "Retorna os alertas ativos no cache")
+    public ResponseEntity<List<AlertaDTO>> getAlertasEmMemoria() {
+        // Retorna a lista que o Service preencheu
+        return ResponseEntity.ok(TelemetriaService.ALERTA_CACHE);
     }
 }

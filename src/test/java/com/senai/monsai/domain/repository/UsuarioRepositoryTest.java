@@ -28,7 +28,7 @@ class UsuarioRepositoryTest {
     private TestEntityManager entityManager;
 
     @Test
-    @DisplayName("Deve buscar um usuário por e-mail com sucesso")
+    @DisplayName("1. Deve buscar um usuário por e-mail com sucesso")
     void findByEmailSucesso() {
         // Cenário
         Usuario usuario = criarUsuario("João", "joao@teste.com", "11122233344");
@@ -43,7 +43,7 @@ class UsuarioRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve retornar vazio ao buscar e-mail inexistente")
+    @DisplayName("2. Deve retornar vazio ao buscar e-mail inexistente")
     void deveRetornarVazioParaEmailInexistente() {
         Optional<Usuario> resultado = usuarioRepository.findByEmail("naoexiste@gmail.com");
 
@@ -51,7 +51,7 @@ class UsuarioRepositoryTest {
     }
 
     @Test
-    @DisplayName("Não deve permitir salvar dois usuários com o mesmo e-mail")
+    @DisplayName("3. Não deve permitir salvar dois usuários com o mesmo e-mail")
     void erroEmailDuplicado() {
         // Primeiro usuário persistido
         Usuario u1 = criarUsuario("Primeiro", "duplicado@teste.com", "11111111111");
@@ -67,7 +67,7 @@ class UsuarioRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve filtrar usuários por tipo")
+    @DisplayName("4. Deve filtrar usuários por tipo")
     void deveBuscarUsuariosPorTipo() {
         Usuario u1 = criarUsuario("Gestor", "g1@teste.com", "33333333333");
         u1.setTipo(TipoUsuario.GESTOR);
@@ -81,7 +81,7 @@ class UsuarioRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve encontrar usuários por asilo")
+    @DisplayName("5. Deve encontrar usuários por asilo")
     void deveBuscarPorAsilo() {
         // Preparando o Asilo
         Asilo asilo = new Asilo();
@@ -102,16 +102,106 @@ class UsuarioRepositoryTest {
         assertThat(resultado.get(0).getAsilo().getNome()).isEqualTo("Asilo A");
     }
 
-    /**
-     * Método auxiliar para evitar repetição de código (DRY)
-     */
+    @Test
+    @DisplayName("6. Deve retornar true ao verificar CPF já cadastrado")
+    void deveDetectarCpfJaCadastrado() {
+        // Arrange
+        Usuario usuario = criarUsuario("Titular", "titular@email.com", "99988877766");
+        entityManager.persist(usuario);
+
+        // Act
+        boolean cpfExiste  = usuarioRepository.existsByCpf("99988877766");
+        boolean cpfNaoExiste = usuarioRepository.existsByCpf("00000000000");
+
+        // Assert
+        assertThat(cpfExiste).isTrue();
+        assertThat(cpfNaoExiste).isFalse();
+    }
+
+    @Test
+    @DisplayName("7. Deve cadastrar e recuperar usuário com perfil FAMILIAR")
+    void deveCadastrarFamiliar() {
+        // Arrange
+        Usuario familiar = criarUsuario("Ana Familiar", "ana@familia.com", "12312312312");
+        familiar.setTipo(TipoUsuario.FAMILIAR);
+        entityManager.persist(familiar);
+
+        // Act
+        List<Usuario> familiares = usuarioRepository.findByTipo(TipoUsuario.FAMILIAR);
+
+        // Assert
+        assertThat(familiares).hasSize(1);
+        assertThat(familiares.get(0).getNome()).isEqualTo("Ana Familiar");
+        assertThat(familiares.get(0).getTipo()).isEqualTo(TipoUsuario.FAMILIAR);
+    }
+
+    @Test
+    @DisplayName("8. Deve listar apenas usuários do tipo GESTOR ativos no asilo")
+    void deveListarGestoresPorTipo() {
+        // Arrange — 1 GESTOR e 1 CUIDADOR no mesmo asilo
+        Usuario gestor = criarUsuario("Carlos Gestor", "carlos@asilo.com", "55566677788");
+        gestor.setTipo(TipoUsuario.GESTOR);
+        entityManager.persist(gestor);
+
+        Usuario cuidador = criarUsuario("Paula Cuidadora", "paula@asilo.com", "11122233344");
+        cuidador.setTipo(TipoUsuario.CUIDADOR);
+        entityManager.persist(cuidador);
+
+        // Act
+        List<Usuario> gestores  = usuarioRepository.findByTipo(TipoUsuario.GESTOR);
+        List<Usuario> cuidadores = usuarioRepository.findByTipo(TipoUsuario.CUIDADOR);
+
+        // Assert
+        assertThat(gestores).hasSize(1);
+        assertThat(cuidadores).hasSize(1);
+        assertThat(gestores.get(0).getNome()).isEqualTo("Carlos Gestor");
+    }
+
+    @Test
+    @DisplayName("9. Deve atualizar dados cadastrais do usuário com sucesso")
+    void deveAtualizarDadosCadastraisDoUsuario() {
+        // Arrange
+        Usuario usuario = criarUsuario("Nome Antigo", "antigo@email.com", "77788899900");
+        Usuario salvo = usuarioRepository.saveAndFlush(usuario);
+
+        // Act — Gestor atualiza nome e email
+        salvo.setNome("Nome Atualizado");
+        salvo.setEmail("atualizado@email.com");
+        Usuario atualizado = usuarioRepository.saveAndFlush(salvo);
+
+        // Assert
+        assertThat(atualizado.getNome()).isEqualTo("Nome Atualizado");
+        assertThat(atualizado.getEmail()).isEqualTo("atualizado@email.com");
+    }
+
+    @Test
+    @DisplayName("10. Deve desativar usuário e confirmar status ativo = false")
+    void deveDesativarUsuario() {
+        // Arrange
+        Usuario usuario = criarUsuario("Usuário Ativo", "ativo@email.com", "33344455566");
+        usuario.setAtivo(true);
+        Usuario salvo = usuarioRepository.saveAndFlush(usuario);
+
+        // Act — administrador desativa o usuario
+        salvo.setAtivo(false);
+        Usuario desativado = usuarioRepository.saveAndFlush(salvo);
+        entityManager.clear();
+
+        Usuario encontrado = usuarioRepository.findById(desativado.getId()).orElseThrow();
+
+        // Assert
+        assertThat(encontrado.isAtivo()).isFalse();
+    }
+
+    //DRY
     private Usuario criarUsuario(String nome, String email, String cpf) {
         Usuario u = new Usuario();
         u.setNome(nome);
         u.setEmail(email);
         u.setCpf(cpf);
-        u.setSenha("123456");
+        u.setSenha("monsai123");
         u.setAtivo(true);
         return u;
     }
+
 }

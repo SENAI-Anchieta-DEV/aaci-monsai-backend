@@ -6,6 +6,7 @@ import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Usuario;
 import com.senai.monsai.domain.enums.TipoUsuario;
 import com.senai.monsai.domain.repository.AsiloRepository;
+import com.senai.monsai.domain.repository.IdosoRepository;
 import com.senai.monsai.domain.repository.UsuarioRepository;
 import com.senai.monsai.infrastructure.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,18 +29,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class UsuarioControllerIT {
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
-    @Autowired private UsuarioRepository usuarioRepository;
-    @Autowired private AsiloRepository asiloRepository;
+    @Autowired
+    private IdosoRepository idosoRepository;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
+    private AsiloRepository asiloRepository;
 
-    @Autowired private JwtService jwtService;
+    @Autowired
+    private JwtService jwtService;
 
     private Asilo asiloSalvo;
     private String tokenGestor;
 
     @BeforeEach
     void setup() {
+        idosoRepository.deleteAll();
         usuarioRepository.deleteAll();
         asiloRepository.deleteAll();
 
@@ -143,7 +151,7 @@ class UsuarioControllerIT {
     @Test
     @DisplayName("5. Segurança: Enfermeiro não pode criar outros usuários")
     void funcionarioNaoPodeCriarUsuario() throws Exception {
-        // Cria um enfermeiro no banco para testar a falha de segurança
+        // 1. Criamos o cenário (Enfermeiro no banco)
         Usuario enfermeiro = new Usuario();
         enfermeiro.setNome("Enfermeiro Teste");
         enfermeiro.setEmail("enfermeiro@teste.com");
@@ -154,13 +162,28 @@ class UsuarioControllerIT {
         enfermeiro.setAtivo(true);
         usuarioRepository.save(enfermeiro);
 
-        // Gera o token de enfermeiro
+        // 2. Geramos um token válido para esse enfermeiro
         String tokenEnfermeiro = jwtService.generateToken(enfermeiro.getEmail(), "ROLE_ENFERMEIRO");
 
+        // 3. Criamos um JSON VÁLIDO (para não cair no erro 400 de validação)
+        // Usamos um bloco de texto para facilitar a leitura do JSON
+        String jsonCorreto = """
+                {
+                    "nome": "Usuário de Teste",
+                    "email": "teste@monsai.com",
+                    "cpf": "12345678901",
+                    "senha": "password123",
+                    "tipo": "CUIDADOR",
+                    "asiloId": %d
+                }
+                """.formatted(asiloSalvo.getId());
+
+        // 4. Executamos a chamada
         mockMvc.perform(post("/usuarios")
-                        .header("Authorization", "Bearer " + tokenEnfermeiro) // <-- Usa o token do enfermeiro
+                        .header("Authorization", "Bearer " + tokenEnfermeiro)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isForbidden()); // Espera um 403 Proibido com sucesso!
+                        .content(jsonCorreto)) // <--- Aqui está o segredo
+                .andExpect(status().isForbidden()); // Agora o 403 deve vir com sucesso!
+        //
     }
 }

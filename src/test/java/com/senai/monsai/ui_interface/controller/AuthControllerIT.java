@@ -107,4 +107,6 @@ class AuthControllerIT {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized());
     }
+
+
 }

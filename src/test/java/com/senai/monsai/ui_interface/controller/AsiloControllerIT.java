@@ -2,6 +2,7 @@ package com.senai.monsai.ui_interface.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senai.monsai.application.dto.AsiloCreateDTO;
+import com.senai.monsai.application.dto.LoginRequestDTO;
 import com.senai.monsai.domain.entity.Asilo;
 import com.senai.monsai.domain.entity.Usuario;
 import com.senai.monsai.domain.enums.TipoUsuario;
@@ -148,6 +149,7 @@ class AsiloControllerIT {
     @DisplayName("7. Deve retornar 400 ao inativar asilo que já está inativo")
     void deveRetornar400InativarJaInativo() throws Exception {
         Asilo asilo = new Asilo();
+        asilo.setCnpj("21.321.321/3213-12");
         asilo.setNome("Inativo");
         asilo.setAtivo(false); // Já inativo
         asilo = asiloRepository.save(asilo);
@@ -155,5 +157,22 @@ class AsiloControllerIT {
         mockMvc.perform(delete("/asilos/" + asilo.getId())
                         .header("Authorization", "Bearer " + tokenAdmin))
                 .andExpect(status().isBadRequest()); // RegraNegocioException
+    }
+
+    @Test
+    @DisplayName("Deve negar login se o asilo do usuário estiver inativo")
+    void deveNegarLoginAsiloInativo() throws Exception {
+        Asilo asilo = new Asilo();
+        asilo.setCnpj("21.321.321/3213-12");
+        asilo.setNome("NoLogin");
+        asilo.setAtivo(false);
+        asiloRepository.save(asilo);
+
+        LoginRequestDTO dto = new LoginRequestDTO("gestor@monsai.com", "senha123");
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isUnauthorized()); // Ou Forbidden, dependendo da sua regra
     }
 }
