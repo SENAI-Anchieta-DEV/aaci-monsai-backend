@@ -33,6 +33,14 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(usuario.getEmail(), usuario.getTipo().name());
-        return new LoginResponseDTO(token, usuario.getTipo().name());
+        // Exemplo de como a equipe de backend deve retornar os dados no AuthService:
+        return new LoginResponseDTO(
+                token,
+                usuario.getTipo().name(),
+                usuario.getId(),
+                usuario.getNome(),
+                usuario.getCpf(),
+                usuario.getAsilo() != null ? usuario.getAsilo().getId() : null
+        );
     }
 }

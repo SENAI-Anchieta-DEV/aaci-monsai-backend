@@ -34,7 +34,7 @@ public class AuthControllerTest {
     void deveRealizarLoginComSucesso() {
         // GIVEN
         LoginRequestDTO dto = new LoginRequestDTO("admin@monsai.com", "senha123");
-        LoginResponseDTO mockResponse = new LoginResponseDTO("jwt_token_exemplo", "SUPER_ADMIN");
+        LoginResponseDTO mockResponse = new LoginResponseDTO("jwt_token_exemplo", "GESTOR", 1L, "GESTOR 1", "12331212310", 1L);
 
         when(authService.autenticar(any(LoginRequestDTO.class))).thenReturn(mockResponse);
 
