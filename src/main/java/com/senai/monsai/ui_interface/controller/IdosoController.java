@@ -61,7 +61,7 @@ public class IdosoController {
     // ==========================================
     @GetMapping("/buscarPorSerial")
     @Operation(summary = "Busca idoso pelo serial da pulseira")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GESTOR', 'CUIDADOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GESTOR', 'CUIDADOR', 'FAMILIAR')")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Idoso encontrado com sucesso"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
@@ -75,7 +75,7 @@ public class IdosoController {
     // ==========================================
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar dados pessoais de um Idoso", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GESTOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GESTOR', 'FAMILIAR')")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Idoso atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Tentativa de editar idoso inativo ou de outro asilo"),
